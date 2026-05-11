@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>フィラリア投薬チェック</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -13,7 +15,6 @@
       color: #333;
     }
 
-    /* ヘッダー */
     header {
       background: linear-gradient(135deg, #1e88e5, #1565c0);
       color: white;
@@ -24,7 +25,6 @@
     header h1 { font-size: 1.3rem; margin-bottom: 4px; }
     header p  { font-size: 0.82rem; opacity: 0.85; }
 
-    /* 年切り替え */
     .year-nav {
       display: flex;
       align-items: center;
@@ -53,7 +53,6 @@
       text-align: center;
     }
 
-    /* 犬の名前 */
     .dog-name-bar {
       display: flex;
       align-items: center;
@@ -79,10 +78,7 @@
       border-color: #ffc107;
     }
 
-    /* 進捗バー */
-    .progress-bar-wrap {
-      padding: 12px 16px 4px;
-    }
+    .progress-bar-wrap { padding: 12px 16px 4px; }
     .progress-label {
       font-size: 0.8rem;
       color: #666;
@@ -103,7 +99,6 @@
       transition: width 0.4s ease;
     }
 
-    /* 月カードグリッド */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -118,49 +113,21 @@
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       border: 2px solid transparent;
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition: transform 0.1s;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
     .month-card:active { transform: scale(0.96); }
+    .month-card.done { background: #e8f5e9; border-color: #43a047; }
+    .month-card.current-month { border-color: #1e88e5; box-shadow: 0 2px 12px rgba(30,136,229,0.2); }
+    .month-card.done.current-month { border-color: #43a047; }
 
-    /* 完了状態 */
-    .month-card.done {
-      background: #e8f5e9;
-      border-color: #43a047;
-    }
-    /* 今月 */
-    .month-card.current-month {
-      border-color: #1e88e5;
-      box-shadow: 0 2px 12px rgba(30,136,229,0.2);
-    }
-    .month-card.done.current-month {
-      border-color: #43a047;
-    }
-    /* 対象外（5月より前、12月より後） */
-    .month-card.inactive {
-      background: #fafafa;
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .month-label {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #444;
-      margin-bottom: 10px;
-    }
+    .month-label { font-size: 1.1rem; font-weight: bold; color: #444; margin-bottom: 10px; }
     .month-card.done .month-label { color: #2e7d32; }
     .month-card.current-month:not(.done) .month-label { color: #1565c0; }
 
-    /* チェックマーク */
-    .check-icon {
-      font-size: 2.4rem;
-      line-height: 1;
-      margin-bottom: 8px;
-      transition: transform 0.2s;
-    }
+    .check-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 8px; }
     .month-card.done .check-icon { animation: popIn 0.3s ease; }
     @keyframes popIn {
       0%   { transform: scale(0.5); }
@@ -168,15 +135,9 @@
       100% { transform: scale(1); }
     }
 
-    /* 投薬日 */
-    .date-given {
-      font-size: 0.72rem;
-      color: #555;
-      min-height: 16px;
-    }
+    .date-given { font-size: 0.72rem; color: #555; min-height: 16px; }
     .month-card.done .date-given { color: #2e7d32; font-weight: bold; }
 
-    /* 今月バッジ */
     .current-badge {
       display: inline-block;
       background: #1e88e5;
@@ -189,7 +150,7 @@
     }
     .month-card.done .current-badge { background: #43a047; }
 
-    /* メモモーダル */
+    /* モーダル */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -198,7 +159,6 @@
       align-items: flex-end;
       justify-content: center;
       z-index: 100;
-      padding: 0;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
@@ -214,13 +174,7 @@
       to   { transform: translateY(0); }
     }
     .modal h2 { font-size: 1rem; color: #1565c0; margin-bottom: 16px; }
-    .modal-label {
-      font-size: 0.82rem;
-      font-weight: bold;
-      color: #555;
-      margin-bottom: 6px;
-      display: block;
-    }
+    .modal-label { font-size: 0.82rem; font-weight: bold; color: #555; margin-bottom: 6px; display: block; }
     .modal input[type=date],
     .modal textarea {
       width: 100%;
@@ -232,10 +186,7 @@
       margin-bottom: 14px;
     }
     .modal input[type=date]:focus,
-    .modal textarea:focus {
-      outline: none;
-      border-color: #1e88e5;
-    }
+    .modal textarea:focus { outline: none; border-color: #1e88e5; }
     .modal textarea { resize: none; height: 70px; }
     .modal-actions { display: flex; gap: 10px; }
     .modal-btn {
@@ -253,7 +204,33 @@
     .modal-btn.cancel  { background: #f0f0f0; color: #555; }
     .modal-btn:active  { opacity: 0.85; }
 
-    /* 注意書き */
+    /* 接続状態 */
+    .conn-pill {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 50;
+    }
+    .conn-ok      { background: #e6f4ea; color: #2e7d32; }
+    .conn-error   { background: #fce8e6; color: #c62828; }
+    .conn-loading { background: #e8eaf6; color: #3949ab; }
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid #c5cae9;
+      border-top-color: #1565c0;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 3px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .note {
       text-align: center;
       font-size: 0.75rem;
@@ -269,20 +246,17 @@
   <p>5月〜12月の投薬を記録します</p>
 </header>
 
-<!-- 年切り替え -->
 <div class="year-nav">
   <button id="prevYear">◀</button>
   <div class="year-label" id="yearLabel"></div>
   <button id="nextYear">▶</button>
 </div>
 
-<!-- 犬の名前 -->
 <div class="dog-name-bar">
   🐾 わんちゃんの名前：
   <input type="text" id="dogName" placeholder="例：ポチ" maxlength="10">
 </div>
 
-<!-- 進捗バー -->
 <div class="progress-bar-wrap">
   <div class="progress-label">
     <span id="progressText">投薬済み 0／8ヶ月</span>
@@ -293,12 +267,10 @@
   </div>
 </div>
 
-<!-- 月カード -->
 <div class="grid" id="monthGrid"></div>
 
 <p class="note">💡 月をタップすると投薬日を記録できます</p>
 
-<!-- 入力モーダル -->
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal">
     <h2 id="modalTitle"></h2>
@@ -314,146 +286,187 @@
   </div>
 </div>
 
+<div class="conn-pill conn-loading" id="connPill">
+  <span class="spinner"></span>接続中...
+</div>
+
 <script>
-  const TARGET_MONTHS = [5,6,7,8,9,10,11,12]; // 5月〜12月
-  const MONTH_LABELS  = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+// ========================================================
+// ★★ Firebase 設定 ★★（電話当番アプリと同じ値）
+// ========================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC7vuZFKeHjnt_Z3mPOIGId8gV1698CYao",
+  authDomain: "denwa-toban-report.firebaseapp.com",
+  projectId: "denwa-toban-report",
+  storageBucket: "denwa-toban-report.firebasestorage.app",
+  messagingSenderId: "416564829020",
+  appId: "1:416564829020:web:922f2f88b6cc78c3297f99"
+};
+// ========================================================
 
-  let currentYear = new Date().getFullYear();
-  let currentModal = null; // 今開いているモーダルの月
+const TARGET_MONTHS = [5,6,7,8,9,10,11,12];
+const MONTH_LABELS  = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
-  // ---- データ操作 ----
-  function storageKey(year) { return `filaria-${year}`; }
+let currentYear = new Date().getFullYear();
+let currentModal = null;
+let yearCache = {};      // { month: { date, memo } }
+let unsubListener = null;
+let db = null;
 
-  function loadData(year) {
-    try { return JSON.parse(localStorage.getItem(storageKey(year)) || '{}'); }
-    catch { return {}; }
-  }
+// ---- Firebase 初期化 ----
+firebase.initializeApp(FIREBASE_CONFIG);
+db = firebase.firestore();
 
-  function saveData(year, data) {
-    localStorage.setItem(storageKey(year), JSON.stringify(data));
-  }
+// ---- 犬の名前（ローカル保存） ----
+const dogNameInput = document.getElementById('dogName');
+dogNameInput.value = localStorage.getItem('filaria-dog-name') || '';
+dogNameInput.addEventListener('input', () => {
+  localStorage.setItem('filaria-dog-name', dogNameInput.value);
+});
 
-  function loadDogName() {
-    return localStorage.getItem('filaria-dog-name') || '';
-  }
-  function saveDogName(name) {
-    localStorage.setItem('filaria-dog-name', name);
-  }
+// ---- Firestore のドキュメントID ----
+function docId(year, month) {
+  return `${year}-${String(month).padStart(2,'0')}`;
+}
 
-  // ---- 描画 ----
-  function render() {
-    const today = new Date();
-    const thisYear  = today.getFullYear();
-    const thisMonth = today.getMonth() + 1;
-    const data = loadData(currentYear);
+// ---- データ読み込み（リアルタイム） ----
+function loadYearData() {
+  if (unsubListener) { unsubListener(); unsubListener = null; }
+  yearCache = {};
+  setConn('loading', '<span class="spinner"></span>接続中...');
 
-    document.getElementById('yearLabel').textContent = `${currentYear}年`;
+  const startId = `${currentYear}-05`;
+  const endId   = `${currentYear}-12`;
 
-    // 進捗
-    const doneCount = TARGET_MONTHS.filter(m => data[m]?.date).length;
-    document.getElementById('progressText').textContent = `投薬済み ${doneCount}／${TARGET_MONTHS.length}ヶ月`;
-    const pct = Math.round(doneCount / TARGET_MONTHS.length * 100);
-    document.getElementById('progressPct').textContent = `${pct}%`;
-    document.getElementById('progressFill').style.width = `${pct}%`;
+  unsubListener = db.collection('filaria')
+    .orderBy(firebase.firestore.FieldPath.documentId())
+    .startAt(startId)
+    .endAt(endId)
+    .onSnapshot(
+      snap => {
+        yearCache = {};
+        snap.forEach(doc => {
+          const month = parseInt(doc.id.split('-')[1], 10);
+          yearCache[month] = doc.data();
+        });
+        render();
+        setConn('ok', '✅ 接続済み');
+      },
+      err => {
+        console.error(err);
+        setConn('error', '❌ 接続エラー');
+      }
+    );
+}
 
-    // カード
-    const grid = document.getElementById('monthGrid');
-    grid.innerHTML = '';
+// ---- 描画 ----
+function render() {
+  const today = new Date();
+  const thisYear  = today.getFullYear();
+  const thisMonth = today.getMonth() + 1;
 
-    TARGET_MONTHS.forEach(month => {
-      const rec = data[month];
-      const isDone    = !!rec?.date;
-      const isCurrent = (currentYear === thisYear && month === thisMonth);
+  document.getElementById('yearLabel').textContent = `${currentYear}年`;
 
-      const card = document.createElement('div');
-      card.className = 'month-card' +
-        (isDone    ? ' done'          : '') +
-        (isCurrent ? ' current-month' : '');
+  const doneCount = TARGET_MONTHS.filter(m => yearCache[m]?.date).length;
+  document.getElementById('progressText').textContent = `投薬済み ${doneCount}／${TARGET_MONTHS.length}ヶ月`;
+  const pct = Math.round(doneCount / TARGET_MONTHS.length * 100);
+  document.getElementById('progressPct').textContent = `${pct}%`;
+  document.getElementById('progressFill').style.width = `${pct}%`;
 
-      card.innerHTML = `
-        ${isCurrent ? '<div class="current-badge">今月</div>' : '<div style="height:18px"></div>'}
-        <div class="check-icon">${isDone ? '✅' : '⬜'}</div>
-        <div class="month-label">${MONTH_LABELS[month]}</div>
-        <div class="date-given">${isDone ? rec.date + (rec.memo ? '📝' : '') : '未記録'}</div>
-      `;
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
 
-      card.addEventListener('click', () => openModal(month));
-      grid.appendChild(card);
-    });
-  }
+  TARGET_MONTHS.forEach(month => {
+    const rec       = yearCache[month];
+    const isDone    = !!rec?.date;
+    const isCurrent = (currentYear === thisYear && month === thisMonth);
 
-  // ---- モーダル ----
-  function openModal(month) {
-    currentModal = month;
-    const data = loadData(currentYear);
-    const rec  = data[month];
+    const card = document.createElement('div');
+    card.className = 'month-card' +
+      (isDone    ? ' done'          : '') +
+      (isCurrent ? ' current-month' : '');
 
-    document.getElementById('modalTitle').textContent =
-      `${currentYear}年 ${MONTH_LABELS[month]} の投薬記録`;
+    card.innerHTML = `
+      ${isCurrent ? '<div class="current-badge">今月</div>' : '<div style="height:18px"></div>'}
+      <div class="check-icon">${isDone ? '✅' : '⬜'}</div>
+      <div class="month-label">${MONTH_LABELS[month]}</div>
+      <div class="date-given">${isDone ? rec.date + (rec.memo ? ' 📝' : '') : '未記録'}</div>
+    `;
+    card.addEventListener('click', () => openModal(month));
+    grid.appendChild(card);
+  });
+}
 
-    // 日付の初期値：記録済みならその日付、なければ今日
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-    document.getElementById('dateInput').value = rec?.date || todayStr;
-    document.getElementById('memoInput').value = rec?.memo || '';
-    document.getElementById('deleteBtn').style.display = rec?.date ? 'block' : 'none';
+// ---- モーダル ----
+function openModal(month) {
+  currentModal = month;
+  const rec = yearCache[month];
+  document.getElementById('modalTitle').textContent =
+    `${currentYear}年 ${MONTH_LABELS[month]} の投薬記録`;
 
-    document.getElementById('modalOverlay').classList.remove('hidden');
-  }
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  document.getElementById('dateInput').value = rec?.date || todayStr;
+  document.getElementById('memoInput').value = rec?.memo || '';
+  document.getElementById('deleteBtn').style.display = rec?.date ? 'block' : 'none';
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
 
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.add('hidden');
-    currentModal = null;
-  }
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+  currentModal = null;
+}
 
-  function saveRecord() {
-    if (currentModal === null) return;
-    const date = document.getElementById('dateInput').value;
-    const memo = document.getElementById('memoInput').value.trim();
-    if (!date) { alert('投薬日を選んでください。'); return; }
+async function saveRecord() {
+  if (currentModal === null) return;
+  const date = document.getElementById('dateInput').value;
+  const memo = document.getElementById('memoInput').value.trim();
+  if (!date) { alert('投薬日を選んでください。'); return; }
 
-    const data = loadData(currentYear);
-    data[currentModal] = { date, memo };
-    saveData(currentYear, data);
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+  try {
+    await db.collection('filaria').doc(docId(currentYear, currentModal)).set({ date, memo });
     closeModal();
-    render();
+  } catch(e) {
+    alert('保存に失敗しました。\n' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '記録する';
   }
+}
 
-  function deleteRecord() {
-    if (currentModal === null) return;
-    if (!confirm('この月の記録を取り消しますか？')) return;
-    const data = loadData(currentYear);
-    delete data[currentModal];
-    saveData(currentYear, data);
+async function deleteRecord() {
+  if (currentModal === null) return;
+  if (!confirm('この月の記録を取り消しますか？')) return;
+  try {
+    await db.collection('filaria').doc(docId(currentYear, currentModal)).delete();
     closeModal();
-    render();
+  } catch(e) {
+    alert('削除に失敗しました。\n' + e.message);
   }
+}
 
-  // ---- イベント ----
-  document.getElementById('prevYear').addEventListener('click', () => {
-    currentYear--;
-    render();
-  });
-  document.getElementById('nextYear').addEventListener('click', () => {
-    currentYear++;
-    render();
-  });
-  document.getElementById('saveBtn').addEventListener('click', saveRecord);
-  document.getElementById('deleteBtn').addEventListener('click', deleteRecord);
-  document.getElementById('modalCancel').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
+// ---- イベント ----
+document.getElementById('prevYear').addEventListener('click', () => { currentYear--; loadYearData(); });
+document.getElementById('nextYear').addEventListener('click', () => { currentYear++; loadYearData(); });
+document.getElementById('saveBtn').addEventListener('click', saveRecord);
+document.getElementById('deleteBtn').addEventListener('click', deleteRecord);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
 
-  // 犬の名前
-  const dogNameInput = document.getElementById('dogName');
-  dogNameInput.value = loadDogName();
-  dogNameInput.addEventListener('input', () => saveDogName(dogNameInput.value));
+function setConn(state, html) {
+  const el = document.getElementById('connPill');
+  el.className = `conn-pill conn-${state}`;
+  el.innerHTML = html;
+}
+function pad(n) { return String(n).padStart(2,'0'); }
 
-  function pad(n) { return String(n).padStart(2, '0'); }
-
-  // 起動
-  render();
+// 起動
+loadYearData();
 </script>
 </body>
 </html>
