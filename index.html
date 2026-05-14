@@ -3,285 +3,444 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>フィラリア投薬チェック</title>
+  <title>にこちゃんの健康管理アプリ</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
-      background: #f0f7ff;
+      background-color: #FFF0F7;
+      background-image: radial-gradient(circle, #FFB7C5 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
       min-height: 100vh;
       color: #333;
     }
 
+    /* ══ ヘッダー ══ */
     header {
-      background: linear-gradient(135deg, #1e88e5, #1565c0);
+      background: #F06292;
       color: white;
       padding: 20px 16px 16px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 0 #C2185B;
     }
-    header h1 { font-size: 1.3rem; margin-bottom: 4px; }
-    header p  { font-size: 0.82rem; opacity: 0.85; }
+    header h1 { font-size: 1.25rem; font-weight: bold; letter-spacing: 0.04em; margin-bottom: 4px; }
+    header p  { font-size: 0.76rem; opacity: 0.92; }
 
+    /* ══ 年ナビ ══ */
     .year-nav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 14px 16px;
-      background: white;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      padding: 10px 16px;
+      background: #F3E5F5;
+      border-bottom: 3px solid #AB47BC;
     }
     .year-nav button {
-      background: #e3f2fd;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 18px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      color: #1565c0;
-      font-family: inherit;
+      background: white; border: 2.5px solid #AB47BC; border-radius: 50px;
+      padding: 5px 16px; font-size: 0.95rem; cursor: pointer;
+      color: #7B1FA2; font-family: inherit; font-weight: bold;
+      box-shadow: 0 3px 0 #AB47BC;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .year-nav button:active { background: #bbdefb; }
-    .year-label {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #1565c0;
-      min-width: 80px;
-      text-align: center;
+    .year-nav button:active { transform: translateY(3px); box-shadow: none; }
+    .year-nav-label { font-size: 0.95rem; font-weight: bold; color: #7B1FA2; min-width: 70px; text-align: center; }
+
+    /* ══ フィラリア進捗 ══ */
+    .filaria-bar {
+      background: white; margin: 10px 10px 0;
+      padding: 12px 14px 14px; border-radius: 16px;
+      border: 3px solid #4CAF50; box-shadow: 0 3px 0 #388E3C;
+    }
+    .filaria-bar-title { font-size: 0.74rem; font-weight: bold; color: #2E7D32; margin-bottom: 10px; text-align: center; }
+    .filaria-chips { display: flex; gap: 5px; justify-content: center; }
+    .f-chip {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 0.62rem; color: #aaa; min-width: 30px;
+      padding: 5px 4px; border-radius: 10px;
+      background: #F5F5F5; border: 2px solid #E0E0E0; font-weight: bold;
+    }
+    .f-chip .f-ico { font-size: 1.05rem; }
+    .f-chip.done { background: #C8E6C9; border-color: #4CAF50; color: #1B5E20; }
+
+    /* ══ 月ナビ ══ */
+    .month-nav {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      padding: 12px 16px; margin: 10px 10px 0;
+      background: white; border-radius: 16px;
+      border: 3px solid #F06292; box-shadow: 0 3px 0 #C2185B;
+    }
+    .month-nav button {
+      background: #F06292; border: none; border-radius: 50px;
+      padding: 9px 20px; font-size: 1.1rem; cursor: pointer; color: white;
+      font-family: inherit; font-weight: bold;
+      box-shadow: 0 4px 0 #C2185B;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .month-nav button:active { transform: translateY(4px); box-shadow: none; }
+    .month-nav-label { font-size: 1.1rem; font-weight: bold; color: #333; min-width: 115px; text-align: center; }
+
+    /* ══ カレンダー ══ */
+    .calendar { padding: 10px 10px 14px; }
+    .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 5px; }
+    .cal-header-cell { text-align: center; font-size: 0.68rem; padding: 3px 0; font-weight: bold; color: #999; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-cell {
+      background: white; border-radius: 10px; min-height: 62px;
+      padding: 5px 2px 4px; text-align: center;
+      cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+      border: 2px solid #EEE; transition: transform 0.1s;
+    }
+    .cal-cell:active { transform: scale(0.86); }
+    .cal-cell.empty  { background: transparent; border-color: transparent; pointer-events: none; }
+    .cal-cell.today  { background: #FFF0F5; border: 2.5px solid #F06292; box-shadow: 0 2px 0 #F06292; }
+    .cal-cell.has-data { background: #FDF5FF; border-color: #CE93D8; }
+    .cal-cell.today.has-data { background: #FFF0F5; border-color: #F06292; }
+
+    .cal-date { font-size: 0.8rem; font-weight: bold; color: #555; line-height: 1.5; }
+    .cal-dots { display: flex; justify-content: center; gap: 2px; margin-top: 3px; flex-wrap: wrap; }
+    .cal-dot  { width: 7px; height: 7px; border-radius: 50%; }
+    .dot-filaria { background: #AB47BC; }
+    .dot-weight  { background: #1E88E5; }
+    .dot-health  { background: #43A047; }
+    .dot-alert   { background: #E53935; }
+    .cal-camera  { font-size: 0.72rem; line-height: 1; margin-top: 3px; }
+
+    /* ══ 凡例 ══ */
+    .legend {
+      display: flex; gap: 8px; justify-content: center;
+      padding: 6px 16px 14px; flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.65rem; color: #777;
+      background: white; border-radius: 20px;
+      padding: 3px 9px; border: 1.5px solid #EEE;
     }
 
-    .dog-name-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 16px;
-      background: #fff8e1;
-      border-bottom: 1px solid #ffe082;
-      font-size: 0.9rem;
-      color: #5d4037;
-    }
-    .dog-name-bar input {
-      border: 1.5px solid #ffe082;
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      width: 120px;
-      background: white;
-    }
-    .dog-name-bar input:focus {
-      outline: none;
-      border-color: #ffc107;
-    }
-
-    .progress-bar-wrap { padding: 12px 16px 4px; }
-    .progress-label {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .progress-track {
-      background: #e0e0e0;
-      border-radius: 10px;
-      height: 10px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #43a047, #66bb6a);
-      border-radius: 10px;
-      transition: width 0.4s ease;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      padding: 12px 12px 24px;
-    }
-
-    .month-card {
-      background: white;
-      border-radius: 16px;
-      padding: 16px 12px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      border: 2px solid transparent;
-      transition: transform 0.1s;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    .month-card:active { transform: scale(0.96); }
-    .month-card.done { background: #e8f5e9; border-color: #43a047; }
-    .month-card.current-month { border-color: #1e88e5; box-shadow: 0 2px 12px rgba(30,136,229,0.2); }
-    .month-card.done.current-month { border-color: #43a047; }
-
-    .month-label { font-size: 1.1rem; font-weight: bold; color: #444; margin-bottom: 10px; }
-    .month-card.done .month-label { color: #2e7d32; }
-    .month-card.current-month:not(.done) .month-label { color: #1565c0; }
-
-    .check-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 8px; }
-    .month-card.done .check-icon { animation: popIn 0.3s ease; }
-    @keyframes popIn {
-      0%   { transform: scale(0.5); }
-      70%  { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-
-    .date-given { font-size: 0.72rem; color: #555; min-height: 16px; }
-    .month-card.done .date-given { color: #2e7d32; font-weight: bold; }
-
-    .current-badge {
-      display: inline-block;
-      background: #1e88e5;
-      color: white;
-      font-size: 0.6rem;
-      padding: 1px 6px;
-      border-radius: 8px;
-      margin-bottom: 4px;
-      font-weight: bold;
-    }
-    .month-card.done .current-badge { background: #43a047; }
-
-    /* モーダル */
+    /* ══ モーダル ══ */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
+      position: fixed; inset: 0;
+      background: rgba(100,0,60,0.4);
+      display: flex; align-items: flex-end; justify-content: center;
       z-index: 100;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: white;
-      border-radius: 20px 20px 0 0;
-      padding: 24px 20px 32px;
-      width: 100%;
-      max-width: 480px;
-      animation: slideUp 0.2s ease-out;
+      background: #FFF8FC;
+      border-radius: 24px 24px 0 0;
+      border-top: 4px solid #F06292;
+      padding: 16px 14px 36px;
+      width: 100%; max-width: 480px;
+      animation: slideUp 0.22s ease-out;
+      max-height: 92vh; overflow-y: auto;
     }
     @keyframes slideUp {
       from { transform: translateY(100%); }
       to   { transform: translateY(0); }
     }
-    .modal h2 { font-size: 1rem; color: #1565c0; margin-bottom: 16px; }
-    .modal-label { font-size: 0.82rem; font-weight: bold; color: #555; margin-bottom: 6px; display: block; }
-    .modal input[type=date],
+    .modal-drag { width: 44px; height: 5px; background: #F06292; border-radius: 3px; margin: 0 auto 14px; }
+    .modal-title { font-size: 1.05rem; font-weight: bold; color: #C2185B; margin-bottom: 2px; text-align: center; }
+    .modal-sub   { font-size: 0.7rem; color: #CCC; margin-bottom: 12px; text-align: center; }
+
+    /* セクションカード */
+    .sec-card { border-radius: 16px; padding: 12px 12px 10px; margin-bottom: 10px; }
+    .sec-filaria { background: #E8F5E9; border: 3px solid #4CAF50; }
+    .sec-weight  { background: #E3F2FD; border: 3px solid #1E88E5; }
+    .sec-food    { background: #FFF3E0; border: 3px solid #FF9800; }
+    .sec-water   { background: #F3E5F5; border: 3px solid #9C27B0; }
+    .sec-urine   { background: #FCE4EC; border: 3px solid #E91E8C; }
+    .sec-walk    { background: #F1F8E9; border: 3px solid #7CB342; }
+    .sec-photo   { background: #FBE9E7; border: 3px solid #FF5722; }
+    .sec-memo    { background: #FFFDE7; border: 3px solid #FDD835; }
+
+    .sec-label {
+      font-size: 0.84rem; font-weight: bold; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .sec-filaria .sec-label { color: #2E7D32; }
+    .sec-weight  .sec-label { color: #1565C0; }
+    .sec-food    .sec-label { color: #E65100; }
+    .sec-water   .sec-label { color: #6A1B9A; }
+    .sec-urine   .sec-label { color: #880E4F; }
+    .sec-walk    .sec-label { color: #33691E; }
+    .sec-photo   .sec-label { color: #BF360C; }
+    .sec-memo    .sec-label { color: #F57F17; }
+
+    /* フィラリアトグル */
+    .filaria-toggle {
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+      background: white; border-radius: 12px; padding: 10px 12px;
+      border: 2px solid #A5D6A7;
+    }
+    .filaria-toggle input[type=checkbox] { width: 22px; height: 22px; accent-color: #43A047; cursor: pointer; flex-shrink: 0; }
+    .filaria-toggle-label { font-size: 0.88rem; color: #1B5E20; font-weight: bold; }
+
+    /* 体重ステッパー */
+    .weight-enable-row {
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+      background: white; border-radius: 12px; padding: 10px 12px;
+      border: 2px solid #90CAF9;
+    }
+    .weight-enable-row input[type=checkbox] { width: 22px; height: 22px; accent-color: #1E88E5; cursor: pointer; flex-shrink: 0; }
+    .weight-enable-label { font-size: 0.88rem; color: #1565C0; font-weight: bold; }
+    .weight-stepper {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; margin-top: 12px;
+    }
+    .weight-stepper.hidden { display: none; }
+    .wt-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      border: 2.5px solid #1E88E5; background: white; color: #1565C0;
+      font-size: 1.5rem; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 0 #1565C0;
+      transition: transform 0.1s, box-shadow 0.1s; line-height: 1;
+    }
+    .wt-btn:active { transform: translateY(3px); box-shadow: none; }
+    .wt-display {
+      background: white; border: 2.5px solid #1E88E5;
+      border-radius: 14px; padding: 8px 18px;
+      min-width: 110px; text-align: center;
+      box-shadow: 0 3px 0 #1565C0;
+    }
+    .wt-val  { font-size: 1.5rem; font-weight: bold; color: #1565C0; }
+    .wt-unit { font-size: 0.82rem; color: #888; margin-left: 2px; }
+
+    /* 選択ボタン共通 */
+    .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
+    .btn-choice {
+      flex: 1 1 auto; min-width: calc(33% - 4px);
+      padding: 9px 4px; border-radius: 12px;
+      font-size: 0.73rem; font-family: inherit;
+      cursor: pointer; text-align: center; line-height: 1.4;
+      border: 2px solid #DDD; background: white; color: #666;
+      box-shadow: 0 2px 0 #CCC;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn-choice:active { transform: translateY(2px); box-shadow: none; }
+    .sec-food  .btn-choice.selected { background: #FF9800; border-color: #E65100; color: white; font-weight: bold; box-shadow: 0 3px 0 #BF360C; }
+    .sec-water .btn-choice.selected { background: #9C27B0; border-color: #6A1B9A; color: white; font-weight: bold; box-shadow: 0 3px 0 #4A148C; }
+    .sec-urine .btn-choice.selected { background: #E91E8C; border-color: #880E4F; color: white; font-weight: bold; box-shadow: 0 3px 0 #560027; }
+    .sec-walk  .btn-choice.selected { background: #7CB342; border-color: #33691E; color: white; font-weight: bold; box-shadow: 0 3px 0 #1B5E20; }
+    .btn-choice.alert-choice.selected {
+      background: #E53935 !important; border-color: #B71C1C !important;
+      color: white !important; box-shadow: 0 3px 0 #7F0000 !important;
+    }
+
+    /* 写真 */
+    .photo-preview {
+      border-radius: 12px; overflow: hidden;
+      border: 2.5px solid #FF5722; margin-bottom: 10px;
+      position: relative;
+    }
+    .photo-preview.hidden { display: none; }
+    .photo-preview img {
+      width: 100%; max-height: 220px; object-fit: cover; display: block;
+    }
+    .photo-remove-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.65); color: white;
+      border: none; border-radius: 20px;
+      padding: 5px 12px; font-size: 0.76rem;
+      cursor: pointer; font-family: inherit; font-weight: bold;
+    }
+    .photo-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: white; border: 2.5px dashed #FF5722;
+      border-radius: 12px; padding: 16px 12px;
+      cursor: pointer; color: #BF360C;
+      font-weight: bold; font-size: 0.9rem; width: 100%;
+    }
+    .photo-add-btn:active { opacity: 0.7; }
+    .photo-upload-progress {
+      font-size: 0.78rem; color: #FF5722; text-align: center;
+      margin-top: 6px; min-height: 18px; font-weight: bold;
+    }
+
+    /* テキストエリア */
     .modal textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1.5px solid #dadce0;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      margin-bottom: 14px;
+      width: 100%; padding: 10px 12px;
+      border: 2.5px solid #FDD835; border-radius: 12px;
+      font-size: 0.88rem; font-family: inherit;
+      resize: none; height: 68px; background: white;
     }
-    .modal input[type=date]:focus,
-    .modal textarea:focus { outline: none; border-color: #1e88e5; }
-    .modal textarea { resize: none; height: 70px; }
-    .modal-actions { display: flex; gap: 10px; }
+    .modal textarea:focus { outline: none; border-color: #F57F17; }
+
+    /* アクションボタン */
+    .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
     .modal-btn {
-      flex: 1;
-      padding: 13px;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
+      flex: 1; padding: 14px; border: none; border-radius: 16px;
+      font-size: 0.94rem; font-weight: bold; font-family: inherit; cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .modal-btn.primary { background: #1e88e5; color: white; }
-    .modal-btn.danger  { background: #e53935; color: white; }
-    .modal-btn.cancel  { background: #f0f0f0; color: #555; }
-    .modal-btn:active  { opacity: 0.85; }
+    .modal-btn:active { transform: translateY(3px); box-shadow: none !important; }
+    .modal-btn.primary { background: #F06292; color: white; box-shadow: 0 5px 0 #C2185B; font-size: 1rem; letter-spacing: 0.05em; }
+    .modal-btn.danger  { background: #FFCDD2; color: #C62828; border: 2px solid #EF9A9A; box-shadow: 0 3px 0 #EF9A9A; }
+    .modal-btn.cancel  { background: #EEE; color: #888; box-shadow: 0 3px 0 #CCC; }
 
     /* 接続状態 */
     .conn-pill {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      z-index: 50;
+      position: fixed; bottom: 14px; right: 14px;
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 50;
     }
-    .conn-ok      { background: #e6f4ea; color: #2e7d32; }
-    .conn-error   { background: #fce8e6; color: #c62828; }
-    .conn-loading { background: #e8eaf6; color: #3949ab; }
+    .conn-ok      { background: #C8E6C9; color: #1B5E20; border: 2px solid #4CAF50; }
+    .conn-error   { background: #FFCDD2; color: #B71C1C; border: 2px solid #EF5350; }
+    .conn-loading { background: #E8EAF6; color: #4527A0; border: 2px solid #7986CB; }
     .spinner {
-      display: inline-block;
-      width: 12px; height: 12px;
-      border: 2px solid #c5cae9;
-      border-top-color: #1565c0;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 3px;
+      display: inline-block; width: 11px; height: 11px;
+      border: 2px solid #9FA8DA; border-top-color: #3949AB;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 3px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .note {
-      text-align: center;
-      font-size: 0.75rem;
-      color: #999;
-      padding: 0 16px 16px;
-    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🐕 フィラリア投薬チェック</h1>
-  <p>5月〜12月の投薬を記録します</p>
+  <h1>🐾 にこちゃんの健康管理アプリ</h1>
+  <p>🌸 毎日の健康・フィラリア投薬を記録します 🌸</p>
 </header>
 
 <div class="year-nav">
   <button id="prevYear">◀</button>
-  <div class="year-label" id="yearLabel"></div>
+  <div class="year-nav-label" id="yearLabel"></div>
   <button id="nextYear">▶</button>
 </div>
 
-<div class="dog-name-bar">
-  🐾 わんちゃんの名前：
-  <input type="text" id="dogName" placeholder="例：ポチ" maxlength="10">
+<div class="filaria-bar">
+  <div class="filaria-bar-title">💊 フィラリア投薬チェック（5月〜12月）</div>
+  <div class="filaria-chips" id="filariaChips"></div>
 </div>
 
-<div class="progress-bar-wrap">
-  <div class="progress-label">
-    <span id="progressText">投薬済み 0／8ヶ月</span>
-    <span id="progressPct">0%</span>
-  </div>
-  <div class="progress-track">
-    <div class="progress-fill" id="progressFill" style="width:0%"></div>
-  </div>
+<div class="month-nav">
+  <button id="prevMonth">◀</button>
+  <div class="month-nav-label" id="monthLabel"></div>
+  <button id="nextMonth">▶</button>
 </div>
 
-<div class="grid" id="monthGrid"></div>
+<div class="calendar">
+  <div class="cal-header">
+    <div class="cal-header-cell" style="color:#E53935">日</div>
+    <div class="cal-header-cell">月</div>
+    <div class="cal-header-cell">火</div>
+    <div class="cal-header-cell">水</div>
+    <div class="cal-header-cell">木</div>
+    <div class="cal-header-cell">金</div>
+    <div class="cal-header-cell" style="color:#1E88E5">土</div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+</div>
 
-<p class="note">💡 月をタップすると投薬日を記録できます</p>
+<div class="legend">
+  <div class="legend-item"><span class="cal-dot dot-filaria" style="display:inline-block"></span>フィラリア</div>
+  <div class="legend-item"><span class="cal-dot dot-weight"  style="display:inline-block"></span>体重</div>
+  <div class="legend-item"><span class="cal-dot dot-health"  style="display:inline-block"></span>健康記録</div>
+  <div class="legend-item"><span class="cal-dot dot-alert"   style="display:inline-block"></span>要注意</div>
+  <div class="legend-item">📷 写真あり</div>
+</div>
 
+<!-- モーダル -->
 <div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal">
-    <h2 id="modalTitle"></h2>
-    <label class="modal-label" for="dateInput">投薬日</label>
-    <input type="date" id="dateInput">
-    <label class="modal-label" for="memoInput">メモ（任意）</label>
-    <textarea id="memoInput" placeholder="例：1錠、食後に投与"></textarea>
+  <div class="modal" id="modalBody">
+    <div class="modal-drag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub">✏️ 記録する項目を入力してください（すべて任意）</div>
+
+    <div class="sec-card sec-filaria">
+      <div class="sec-label">💊 フィラリア投薬</div>
+      <label class="filaria-toggle">
+        <input type="checkbox" id="filariaCheck">
+        <span class="filaria-toggle-label">今日フィラリアを投薬した 🐶</span>
+      </label>
+    </div>
+
+    <div class="sec-card sec-weight">
+      <div class="sec-label">⚖️ 体重</div>
+      <label class="weight-enable-row">
+        <input type="checkbox" id="weightEnable">
+        <span class="weight-enable-label">体重を記録する</span>
+      </label>
+      <div class="weight-stepper hidden" id="weightStepper">
+        <button class="wt-btn" id="weightMinus">－</button>
+        <div class="wt-display">
+          <span class="wt-val" id="weightValue">7.5</span><span class="wt-unit">kg</span>
+        </div>
+        <button class="wt-btn" id="weightPlus">＋</button>
+      </div>
+    </div>
+
+    <div class="sec-card sec-food">
+      <div class="sec-label">🍽️ 食事量</div>
+      <div class="btn-group" id="foodGroup">
+        <button class="btn-choice" data-val="かなりよく食べた">🤩 かなりよく食べた</button>
+        <button class="btn-choice" data-val="よく食べた">😋 よく食べた</button>
+        <button class="btn-choice" data-val="普通">👍 普通</button>
+        <button class="btn-choice" data-val="少なめ">😐 少なめ</button>
+        <button class="btn-choice alert-choice" data-val="食べなかった">😟 食べなかった</button>
+      </div>
+    </div>
+
+    <div class="sec-card sec-water">
+      <div class="sec-label">💧 水の摂取量</div>
+      <div class="btn-group" id="waterGroup">
+        <button class="btn-choice" data-val="かなり多い">💦 かなり多い</button>
+        <button class="btn-choice" data-val="多い">💧 多い</button>
+        <button class="btn-choice" data-val="普通">👍 普通</button>
+        <button class="btn-choice" data-val="少なめ">😐 少なめ</button>
+        <button class="btn-choice alert-choice" data-val="飲まなかった">😟 飲まなかった</button>
+      </div>
+    </div>
+
+    <div class="sec-card sec-urine">
+      <div class="sec-label">🚽 おしっこの様子</div>
+      <div class="btn-group" id="urineGroup">
+        <button class="btn-choice" data-val="かなり多い">💦 かなり多い</button>
+        <button class="btn-choice" data-val="多い">🌊 多い</button>
+        <button class="btn-choice" data-val="普通">👍 普通</button>
+        <button class="btn-choice" data-val="少ない">😐 少ない</button>
+        <button class="btn-choice alert-choice" data-val="血尿あり">🚨 血尿あり</button>
+      </div>
+    </div>
+
+    <div class="sec-card sec-walk">
+      <div class="sec-label">🦮 散歩の様子</div>
+      <div class="btn-group" id="walkGroup">
+        <button class="btn-choice" data-val="かなり元気いっぱい">🏃 かなり元気いっぱい</button>
+        <button class="btn-choice" data-val="元気いっぱい">😄 元気いっぱい</button>
+        <button class="btn-choice" data-val="普通">👍 普通</button>
+        <button class="btn-choice" data-val="乗り気じゃない">😐 乗り気じゃない</button>
+        <button class="btn-choice alert-choice" data-val="行きたがらない">😟 行きたがらない</button>
+      </div>
+    </div>
+
+    <div class="sec-card sec-photo">
+      <div class="sec-label">📷 写真</div>
+      <div class="photo-preview hidden" id="photoPreview">
+        <img id="photoImg" src="" alt="記録写真">
+        <button class="photo-remove-btn" id="photoRemoveBtn">✕ 削除</button>
+      </div>
+      <label class="photo-add-btn" id="photoAddBtn">
+        <input type="file" id="photoInput" accept="image/*" style="display:none">
+        📷 写真を追加・変更する
+      </label>
+      <div class="photo-upload-progress" id="photoProgress"></div>
+    </div>
+
+    <div class="sec-card sec-memo">
+      <div class="sec-label">📋 その他体調メモ</div>
+      <textarea id="healthMemoInput" placeholder="例：元気がなかった、嘔吐があった など"></textarea>
+    </div>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" id="modalCancel">キャンセル</button>
-      <button class="modal-btn danger" id="deleteBtn" style="display:none">取り消し</button>
-      <button class="modal-btn primary" id="saveBtn">記録する</button>
+      <button class="modal-btn danger" id="deleteBtn" style="display:none">🗑️ 削除</button>
+      <button class="modal-btn primary" id="saveBtn">✨ 記録する</button>
     </div>
   </div>
 </div>
@@ -291,9 +450,6 @@
 </div>
 
 <script>
-// ========================================================
-// ★★ Firebase 設定 ★★（電話当番アプリと同じ値）
-// ========================================================
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyC7vuZFKeHjnt_Z3mPOIGId8gV1698CYao",
   authDomain: "denwa-toban-report.firebaseapp.com",
@@ -302,157 +458,339 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "416564829020",
   appId: "1:416564829020:web:922f2f88b6cc78c3297f99"
 };
-// ========================================================
 
-const TARGET_MONTHS = [5,6,7,8,9,10,11,12];
-const MONTH_LABELS  = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTH_JP       = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const DOW_JP         = ['日','月','火','水','木','金','土'];
+const FILARIA_MONTHS = [5,6,7,8,9,10,11,12];
+const DEFAULT_WEIGHT = 7.5;
 
-let currentYear = new Date().getFullYear();
-let currentModal = null;
-let yearCache = {};      // { month: { date, memo } }
+const todayObj = new Date();
+const todayKey = fmt(todayObj.getFullYear(), todayObj.getMonth()+1, todayObj.getDate());
+
+let currentYear  = todayObj.getFullYear();
+let currentMonth = todayObj.getMonth() + 1;
+let currentModalDate = null;
+let dayCache = {};
 let unsubListener = null;
-let db = null;
+let weightVal = DEFAULT_WEIGHT;
 
-// ---- Firebase 初期化 ----
+// 写真状態
+let currentPhotoUrl  = null;  // 保存済みURL
+let currentPhotoFile = null;  // 新たに選択されたファイル
+let photoRemoved     = false; // 既存写真を削除する
+
 firebase.initializeApp(FIREBASE_CONFIG);
-db = firebase.firestore();
+const db      = firebase.firestore();
+const storage = firebase.storage();
 
-// ---- 犬の名前（ローカル保存） ----
-const dogNameInput = document.getElementById('dogName');
-dogNameInput.value = localStorage.getItem('filaria-dog-name') || '';
-dogNameInput.addEventListener('input', () => {
-  localStorage.setItem('filaria-dog-name', dogNameInput.value);
+// ---- 選択ボタン ----
+['foodGroup','waterGroup','urineGroup','walkGroup'].forEach(gid => {
+  document.getElementById(gid).querySelectorAll('.btn-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const was = btn.classList.contains('selected');
+      document.getElementById(gid).querySelectorAll('.btn-choice').forEach(b => b.classList.remove('selected'));
+      if (!was) btn.classList.add('selected');
+    });
+  });
 });
-
-// ---- Firestore のドキュメントID ----
-function docId(year, month) {
-  return `${year}-${String(month).padStart(2,'0')}`;
+function getChoice(gid) {
+  const s = document.getElementById(gid).querySelector('.btn-choice.selected');
+  return s ? s.dataset.val : null;
 }
-
-// ---- データ読み込み（リアルタイム） ----
-function loadYearData() {
-  if (unsubListener) { unsubListener(); unsubListener = null; }
-  yearCache = {};
-  setConn('loading', '<span class="spinner"></span>接続中...');
-
-  const startId = `${currentYear}-05`;
-  const endId   = `${currentYear}-12`;
-
-  unsubListener = db.collection('filaria')
-    .orderBy(firebase.firestore.FieldPath.documentId())
-    .startAt(startId)
-    .endAt(endId)
-    .onSnapshot(
-      snap => {
-        yearCache = {};
-        snap.forEach(doc => {
-          const month = parseInt(doc.id.split('-')[1], 10);
-          yearCache[month] = doc.data();
-        });
-        render();
-        setConn('ok', '✅ 接続済み');
-      },
-      err => {
-        console.error(err);
-        setConn('error', '❌ 接続エラー');
-      }
-    );
-}
-
-// ---- 描画 ----
-function render() {
-  const today = new Date();
-  const thisYear  = today.getFullYear();
-  const thisMonth = today.getMonth() + 1;
-
-  document.getElementById('yearLabel').textContent = `${currentYear}年`;
-
-  const doneCount = TARGET_MONTHS.filter(m => yearCache[m]?.date).length;
-  document.getElementById('progressText').textContent = `投薬済み ${doneCount}／${TARGET_MONTHS.length}ヶ月`;
-  const pct = Math.round(doneCount / TARGET_MONTHS.length * 100);
-  document.getElementById('progressPct').textContent = `${pct}%`;
-  document.getElementById('progressFill').style.width = `${pct}%`;
-
-  const grid = document.getElementById('monthGrid');
-  grid.innerHTML = '';
-
-  TARGET_MONTHS.forEach(month => {
-    const rec       = yearCache[month];
-    const isDone    = !!rec?.date;
-    const isCurrent = (currentYear === thisYear && month === thisMonth);
-
-    const card = document.createElement('div');
-    card.className = 'month-card' +
-      (isDone    ? ' done'          : '') +
-      (isCurrent ? ' current-month' : '');
-
-    card.innerHTML = `
-      ${isCurrent ? '<div class="current-badge">今月</div>' : '<div style="height:18px"></div>'}
-      <div class="check-icon">${isDone ? '✅' : '⬜'}</div>
-      <div class="month-label">${MONTH_LABELS[month]}</div>
-      <div class="date-given">${isDone ? rec.date + (rec.memo ? ' 📝' : '') : '未記録'}</div>
-    `;
-    card.addEventListener('click', () => openModal(month));
-    grid.appendChild(card);
+function setChoice(gid, val) {
+  document.getElementById(gid).querySelectorAll('.btn-choice').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === val);
   });
 }
 
-// ---- モーダル ----
-function openModal(month) {
-  currentModal = month;
-  const rec = yearCache[month];
-  document.getElementById('modalTitle').textContent =
-    `${currentYear}年 ${MONTH_LABELS[month]} の投薬記録`;
+// ---- 体重ステッパー ----
+const weightEnableEl  = document.getElementById('weightEnable');
+const weightStepperEl = document.getElementById('weightStepper');
+const weightValueEl   = document.getElementById('weightValue');
 
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  document.getElementById('dateInput').value = rec?.date || todayStr;
-  document.getElementById('memoInput').value = rec?.memo || '';
-  document.getElementById('deleteBtn').style.display = rec?.date ? 'block' : 'none';
+weightEnableEl.addEventListener('change', () => {
+  weightStepperEl.classList.toggle('hidden', !weightEnableEl.checked);
+});
+document.getElementById('weightMinus').addEventListener('click', () => {
+  weightVal = Math.round((weightVal - 0.1) * 10) / 10;
+  if (weightVal < 0) weightVal = 0;
+  weightValueEl.textContent = weightVal.toFixed(1);
+});
+document.getElementById('weightPlus').addEventListener('click', () => {
+  weightVal = Math.round((weightVal + 0.1) * 10) / 10;
+  if (weightVal > 99.9) weightVal = 99.9;
+  weightValueEl.textContent = weightVal.toFixed(1);
+});
+function setWeightState(saved) {
+  if (saved) {
+    weightVal = parseFloat(saved);
+    weightEnableEl.checked = true;
+    weightStepperEl.classList.remove('hidden');
+  } else {
+    weightVal = DEFAULT_WEIGHT;
+    weightEnableEl.checked = false;
+    weightStepperEl.classList.add('hidden');
+  }
+  weightValueEl.textContent = weightVal.toFixed(1);
+}
+
+// ---- 写真 ----
+const photoPreviewEl  = document.getElementById('photoPreview');
+const photoImgEl      = document.getElementById('photoImg');
+const photoAddBtnEl   = document.getElementById('photoAddBtn');
+const photoProgressEl = document.getElementById('photoProgress');
+
+document.getElementById('photoInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) {
+    alert('10MB以下の画像を選択してください。');
+    e.target.value = '';
+    return;
+  }
+  currentPhotoFile = file;
+  photoRemoved = false;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoImgEl.src = ev.target.result;
+    photoPreviewEl.classList.remove('hidden');
+    photoAddBtnEl.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('photoRemoveBtn').addEventListener('click', () => {
+  currentPhotoFile = null;
+  photoRemoved = true;
+  photoPreviewEl.classList.add('hidden');
+  photoAddBtnEl.style.display = '';
+  document.getElementById('photoInput').value = '';
+  photoImgEl.src = '';
+});
+
+function setPhotoState(url) {
+  currentPhotoUrl  = url || null;
+  currentPhotoFile = null;
+  photoRemoved     = false;
+  photoProgressEl.textContent = '';
+  if (url) {
+    photoImgEl.src = url;
+    photoPreviewEl.classList.remove('hidden');
+    photoAddBtnEl.style.display = 'none';
+  } else {
+    photoPreviewEl.classList.add('hidden');
+    photoAddBtnEl.style.display = '';
+    document.getElementById('photoInput').value = '';
+  }
+}
+
+async function handlePhotoSave() {
+  // 既存写真を削除
+  if (photoRemoved && currentPhotoUrl) {
+    try { await storage.refFromURL(currentPhotoUrl).delete(); } catch(e) { /* 無視 */ }
+    return null;
+  }
+  // 新しい写真をアップロード
+  if (currentPhotoFile) {
+    photoProgressEl.textContent = '📤 アップロード中...';
+    const ref = storage.ref(`filaria-images/${currentModalDate}/image`);
+    await ref.put(currentPhotoFile);
+    const url = await ref.getDownloadURL();
+    photoProgressEl.textContent = '';
+    return url;
+  }
+  // 変更なし
+  return currentPhotoUrl;
+}
+
+function fmt(y, m, d) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+// ---- Firestore ----
+function loadYearData() {
+  if (unsubListener) { unsubListener(); unsubListener = null; }
+  dayCache = {};
+  setConn('loading', '<span class="spinner"></span>接続中...');
+
+  unsubListener = db.collection('filaria')
+    .orderBy(firebase.firestore.FieldPath.documentId())
+    .startAt(`${currentYear}-01-01`)
+    .endAt(`${currentYear}-12-31`)
+    .onSnapshot(
+      snap => {
+        dayCache = {};
+        snap.forEach(doc => {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(doc.id)) dayCache[doc.id] = doc.data();
+        });
+        renderFilariaChips();
+        renderCalendar();
+        setConn('ok', '✅ 接続済み');
+      },
+      err => { console.error(err); setConn('error', '❌ 接続エラー'); }
+    );
+}
+
+// ---- フィラリアチップ ----
+function renderFilariaChips() {
+  document.getElementById('yearLabel').textContent = `${currentYear}年`;
+  const wrap = document.getElementById('filariaChips');
+  wrap.innerHTML = '';
+  FILARIA_MONTHS.forEach(m => {
+    const prefix = `${currentYear}-${String(m).padStart(2,'0')}-`;
+    const done = Object.keys(dayCache).some(k => k.startsWith(prefix) && dayCache[k].filaria);
+    const chip = document.createElement('div');
+    chip.className = 'f-chip' + (done ? ' done' : '');
+    chip.innerHTML = `<span class="f-ico">${done ? '✅' : '⬜'}</span><span>${m}月</span>`;
+    wrap.appendChild(chip);
+  });
+}
+
+// ---- カレンダー ----
+function renderCalendar() {
+  document.getElementById('monthLabel').textContent = `${currentYear}年 ${MONTH_JP[currentMonth]}`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  const firstDow = new Date(currentYear, currentMonth - 1, 1).getDay();
+  const lastDate = new Date(currentYear, currentMonth, 0).getDate();
+
+  for (let i = 0; i < firstDow; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'cal-cell empty';
+    grid.appendChild(blank);
+  }
+
+  for (let d = 1; d <= lastDate; d++) {
+    const key = fmt(currentYear, currentMonth, d);
+    const rec = dayCache[key];
+    const isToday    = key === todayKey;
+    const hasFilaria = !!rec?.filaria;
+    const hasWeight  = !!rec?.weight;
+    const hasPhoto   = !!rec?.imageUrl;
+    const hasHealth  = rec && (rec.food || rec.water || rec.urine || rec.walk || rec.healthMemo);
+    const isAlert    = rec && (rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.walk === '行きたがらない');
+    const hasAny     = hasFilaria || hasWeight || hasHealth || hasPhoto;
+
+    const dow = (firstDow + d - 1) % 7;
+    let dateColor = '#555';
+    if (dow === 0) dateColor = '#E53935';
+    if (dow === 6) dateColor = '#1E88E5';
+    if (isToday)   dateColor = '#C2185B';
+
+    let dots = '';
+    if (hasFilaria) dots += '<span class="cal-dot dot-filaria"></span>';
+    if (hasWeight)  dots += '<span class="cal-dot dot-weight"></span>';
+    if (isAlert)    dots += '<span class="cal-dot dot-alert"></span>';
+    else if (hasHealth) dots += '<span class="cal-dot dot-health"></span>';
+
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (isToday ? ' today' : '') + (hasAny ? ' has-data' : '');
+    cell.innerHTML = `
+      <div class="cal-date" style="color:${dateColor}">${d}</div>
+      <div class="cal-dots">${dots}</div>
+      ${hasPhoto ? '<div class="cal-camera">📷</div>' : ''}
+    `;
+    cell.addEventListener('click', () => openModal(key, d));
+    grid.appendChild(cell);
+  }
+}
+
+// ---- モーダル ----
+function openModal(key, day) {
+  currentModalDate = key;
+  const rec = dayCache[key] || {};
+  const dow = DOW_JP[new Date(currentYear, currentMonth-1, day).getDay()];
+  document.getElementById('modalTitle').textContent = `${currentMonth}月${day}日（${dow}）の記録`;
+
+  document.getElementById('filariaCheck').checked = !!rec.filaria;
+  setWeightState(rec.weight || null);
+  setChoice('foodGroup',  rec.food  || null);
+  setChoice('waterGroup', rec.water || null);
+  setChoice('urineGroup', rec.urine || null);
+  setChoice('walkGroup',  rec.walk  || null);
+  setPhotoState(rec.imageUrl || null);
+  document.getElementById('healthMemoInput').value = rec.healthMemo || '';
+
+  const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo;
+  document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
   document.getElementById('modalOverlay').classList.remove('hidden');
+  document.getElementById('modalBody').scrollTop = 0;
 }
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.add('hidden');
-  currentModal = null;
+  currentModalDate = null;
 }
 
 async function saveRecord() {
-  if (currentModal === null) return;
-  const date = document.getElementById('dateInput').value;
-  const memo = document.getElementById('memoInput').value.trim();
-  if (!date) { alert('投薬日を選んでください。'); return; }
+  if (!currentModalDate) return;
 
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = '保存中...';
+  btn.disabled = true; btn.textContent = '保存中...';
+
   try {
-    await db.collection('filaria').doc(docId(currentYear, currentModal)).set({ date, memo });
+    const filaria    = document.getElementById('filariaCheck').checked;
+    const weight     = weightEnableEl.checked ? weightValueEl.textContent : null;
+    const food       = getChoice('foodGroup');
+    const water      = getChoice('waterGroup');
+    const urine      = getChoice('urineGroup');
+    const walk       = getChoice('walkGroup');
+    const healthMemo = document.getElementById('healthMemoInput').value.trim();
+    const imageUrl   = await handlePhotoSave();
+
+    const data = {};
+    if (filaria)    data.filaria    = true;
+    if (weight)     data.weight     = weight;
+    if (food)       data.food       = food;
+    if (water)      data.water      = water;
+    if (urine)      data.urine      = urine;
+    if (walk)       data.walk       = walk;
+    if (imageUrl)   data.imageUrl   = imageUrl;
+    if (healthMemo) data.healthMemo = healthMemo;
+
+    if (Object.keys(data).length === 0) {
+      alert('何か入力してから記録してください。');
+      return;
+    }
+    await db.collection('filaria').doc(currentModalDate).set(data);
     closeModal();
   } catch(e) {
+    console.error(e);
     alert('保存に失敗しました。\n' + e.message);
   } finally {
-    btn.disabled = false;
-    btn.textContent = '記録する';
+    btn.disabled = false; btn.textContent = '✨ 記録する';
+    photoProgressEl.textContent = '';
   }
 }
 
 async function deleteRecord() {
-  if (currentModal === null) return;
-  if (!confirm('この月の記録を取り消しますか？')) return;
+  if (!currentModalDate) return;
+  if (!confirm('この日の記録を削除しますか？')) return;
   try {
-    await db.collection('filaria').doc(docId(currentYear, currentModal)).delete();
+    // 写真も削除
+    const rec = dayCache[currentModalDate];
+    if (rec?.imageUrl) {
+      try { await storage.refFromURL(rec.imageUrl).delete(); } catch(e) { /* 無視 */ }
+    }
+    await db.collection('filaria').doc(currentModalDate).delete();
     closeModal();
-  } catch(e) {
-    alert('削除に失敗しました。\n' + e.message);
-  }
+  } catch(e) { alert('削除に失敗しました。\n' + e.message); }
 }
 
 // ---- イベント ----
-document.getElementById('prevYear').addEventListener('click', () => { currentYear--; loadYearData(); });
-document.getElementById('nextYear').addEventListener('click', () => { currentYear++; loadYearData(); });
-document.getElementById('saveBtn').addEventListener('click', saveRecord);
-document.getElementById('deleteBtn').addEventListener('click', deleteRecord);
+document.getElementById('prevYear').addEventListener('click',  () => { currentYear--; loadYearData(); });
+document.getElementById('nextYear').addEventListener('click',  () => { currentYear++; loadYearData(); });
+document.getElementById('prevMonth').addEventListener('click', () => {
+  if (currentMonth === 1)  { currentMonth = 12; currentYear--; loadYearData(); }
+  else { currentMonth--; renderCalendar(); }
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  if (currentMonth === 12) { currentMonth = 1; currentYear++; loadYearData(); }
+  else { currentMonth++; renderCalendar(); }
+});
+document.getElementById('saveBtn').addEventListener('click',    saveRecord);
+document.getElementById('deleteBtn').addEventListener('click',  deleteRecord);
 document.getElementById('modalCancel').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
@@ -463,9 +801,7 @@ function setConn(state, html) {
   el.className = `conn-pill conn-${state}`;
   el.innerHTML = html;
 }
-function pad(n) { return String(n).padStart(2,'0'); }
 
-// 起動
 loadYearData();
 </script>
 </body>
