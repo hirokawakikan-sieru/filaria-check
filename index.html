@@ -12,20 +12,20 @@
 
     body {
       font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
-      background-color: #FFF0F7;
-      background-image: radial-gradient(circle, #FFB7C5 1.5px, transparent 1.5px);
+      background-color: #EAF4FB;
+      background-image: radial-gradient(circle, #AACDE8 1.5px, transparent 1.5px);
       background-size: 20px 20px;
       min-height: 100vh;
-      color: #333;
+      color: #2C3E50;
     }
 
     /* ══ ヘッダー ══ */
     header {
-      background: #F06292;
+      background: #5B9BD5;
       color: white;
       padding: 20px 16px 16px;
       text-align: center;
-      box-shadow: 0 4px 0 #C2185B;
+      box-shadow: 0 4px 0 #2D6A9F;
     }
     header h1 { font-size: 1.25rem; font-weight: bold; letter-spacing: 0.04em; margin-bottom: 4px; }
     header p  { font-size: 0.76rem; opacity: 0.92; }
@@ -34,26 +34,26 @@
     .year-nav {
       display: flex; align-items: center; justify-content: center; gap: 14px;
       padding: 10px 16px;
-      background: #F3E5F5;
-      border-bottom: 3px solid #AB47BC;
+      background: #DEEEFF;
+      border-bottom: 3px solid #5B9BD5;
     }
     .year-nav button {
-      background: white; border: 2.5px solid #AB47BC; border-radius: 50px;
+      background: white; border: 2.5px solid #5B9BD5; border-radius: 50px;
       padding: 5px 16px; font-size: 0.95rem; cursor: pointer;
-      color: #7B1FA2; font-family: inherit; font-weight: bold;
-      box-shadow: 0 3px 0 #AB47BC;
+      color: #2D6A9F; font-family: inherit; font-weight: bold;
+      box-shadow: 0 3px 0 #5B9BD5;
       transition: transform 0.1s, box-shadow 0.1s;
     }
     .year-nav button:active { transform: translateY(3px); box-shadow: none; }
-    .year-nav-label { font-size: 0.95rem; font-weight: bold; color: #7B1FA2; min-width: 70px; text-align: center; }
+    .year-nav-label { font-size: 0.95rem; font-weight: bold; color: #2D6A9F; min-width: 70px; text-align: center; }
 
     /* ══ フィラリア進捗 ══ */
     .filaria-bar {
       background: white; margin: 10px 10px 0;
       padding: 12px 14px 14px; border-radius: 16px;
-      border: 3px solid #4CAF50; box-shadow: 0 3px 0 #388E3C;
+      border: 3px solid #00ACC1; box-shadow: 0 3px 0 #00838F;
     }
-    .filaria-bar-title { font-size: 0.74rem; font-weight: bold; color: #2E7D32; margin-bottom: 10px; text-align: center; }
+    .filaria-bar-title { font-size: 0.74rem; font-weight: bold; color: #00695C; margin-bottom: 10px; text-align: center; }
     .filaria-chips { display: flex; gap: 5px; justify-content: center; }
     .f-chip {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -62,20 +62,20 @@
       background: #F5F5F5; border: 2px solid #E0E0E0; font-weight: bold;
     }
     .f-chip .f-ico { font-size: 1.05rem; }
-    .f-chip.done { background: #C8E6C9; border-color: #4CAF50; color: #1B5E20; }
+    .f-chip.done { background: #B2EBF2; border-color: #00ACC1; color: #006064; }
 
     /* ══ 月ナビ ══ */
     .month-nav {
       display: flex; align-items: center; justify-content: center; gap: 14px;
       padding: 12px 16px; margin: 10px 10px 0;
       background: white; border-radius: 16px;
-      border: 3px solid #F06292; box-shadow: 0 3px 0 #C2185B;
+      border: 3px solid #5B9BD5; box-shadow: 0 3px 0 #2D6A9F;
     }
     .month-nav button {
-      background: #F06292; border: none; border-radius: 50px;
+      background: #5B9BD5; border: none; border-radius: 50px;
       padding: 9px 20px; font-size: 1.1rem; cursor: pointer; color: white;
       font-family: inherit; font-weight: bold;
-      box-shadow: 0 4px 0 #C2185B;
+      box-shadow: 0 4px 0 #2D6A9F;
       transition: transform 0.1s, box-shadow 0.1s;
     }
     .month-nav button:active { transform: translateY(4px); box-shadow: none; }
@@ -91,20 +91,20 @@
       background: white; border-radius: 10px; min-height: 62px;
       padding: 5px 2px 4px; text-align: center;
       cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
-      border: 2px solid #EEE; transition: transform 0.1s;
+      border: 2px solid #D6EAF8; transition: transform 0.1s;
     }
     .cal-cell:active { transform: scale(0.86); }
     .cal-cell.empty  { background: transparent; border-color: transparent; pointer-events: none; }
-    .cal-cell.today  { background: #FFF0F5; border: 2.5px solid #F06292; box-shadow: 0 2px 0 #F06292; }
-    .cal-cell.has-data { background: #FDF5FF; border-color: #CE93D8; }
-    .cal-cell.today.has-data { background: #FFF0F5; border-color: #F06292; }
+    .cal-cell.today  { background: #D6EAF8; border: 2.5px solid #5B9BD5; box-shadow: 0 2px 0 #2D6A9F; }
+    .cal-cell.has-data { background: #EBF5FB; border-color: #85C1E9; }
+    .cal-cell.today.has-data { background: #D6EAF8; border-color: #5B9BD5; }
 
     .cal-date { font-size: 0.8rem; font-weight: bold; color: #555; line-height: 1.5; }
     .cal-dots { display: flex; justify-content: center; gap: 2px; margin-top: 3px; flex-wrap: wrap; }
     .cal-dot  { width: 7px; height: 7px; border-radius: 50%; }
-    .dot-filaria { background: #AB47BC; }
-    .dot-weight  { background: #1E88E5; }
-    .dot-health  { background: #43A047; }
+    .dot-filaria { background: #00ACC1; }
+    .dot-weight  { background: #5B9BD5; }
+    .dot-health  { background: #26A69A; }
     .dot-alert   { background: #E53935; }
     .cal-camera  { font-size: 0.72rem; line-height: 1; margin-top: 3px; }
 
@@ -117,21 +117,21 @@
       display: flex; align-items: center; gap: 4px;
       font-size: 0.65rem; color: #777;
       background: white; border-radius: 20px;
-      padding: 3px 9px; border: 1.5px solid #EEE;
+      padding: 3px 9px; border: 1.5px solid #D6EAF8;
     }
 
     /* ══ モーダル ══ */
     .modal-overlay {
       position: fixed; inset: 0;
-      background: rgba(100,0,60,0.4);
+      background: rgba(20, 60, 100, 0.4);
       display: flex; align-items: flex-end; justify-content: center;
       z-index: 100;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: #FFF8FC;
+      background: #F0F8FF;
       border-radius: 24px 24px 0 0;
-      border-top: 4px solid #F06292;
+      border-top: 4px solid #5B9BD5;
       padding: 16px 14px 36px;
       width: 100%; max-width: 480px;
       animation: slideUp 0.22s ease-out;
@@ -141,42 +141,42 @@
       from { transform: translateY(100%); }
       to   { transform: translateY(0); }
     }
-    .modal-drag { width: 44px; height: 5px; background: #F06292; border-radius: 3px; margin: 0 auto 14px; }
-    .modal-title { font-size: 1.05rem; font-weight: bold; color: #C2185B; margin-bottom: 2px; text-align: center; }
-    .modal-sub   { font-size: 0.7rem; color: #CCC; margin-bottom: 12px; text-align: center; }
+    .modal-drag { width: 44px; height: 5px; background: #5B9BD5; border-radius: 3px; margin: 0 auto 14px; }
+    .modal-title { font-size: 1.05rem; font-weight: bold; color: #2D6A9F; margin-bottom: 2px; text-align: center; }
+    .modal-sub   { font-size: 0.7rem; color: #AAA; margin-bottom: 12px; text-align: center; }
 
     /* セクションカード */
     .sec-card { border-radius: 16px; padding: 12px 12px 10px; margin-bottom: 10px; }
-    .sec-filaria { background: #E8F5E9; border: 3px solid #4CAF50; }
-    .sec-weight  { background: #E3F2FD; border: 3px solid #1E88E5; }
-    .sec-food    { background: #FFF3E0; border: 3px solid #FF9800; }
-    .sec-water   { background: #F3E5F5; border: 3px solid #9C27B0; }
-    .sec-urine   { background: #FCE4EC; border: 3px solid #E91E8C; }
-    .sec-walk    { background: #F1F8E9; border: 3px solid #7CB342; }
-    .sec-photo   { background: #FBE9E7; border: 3px solid #FF5722; }
-    .sec-memo    { background: #FFFDE7; border: 3px solid #FDD835; }
+    .sec-filaria { background: #E0F7FA; border: 3px solid #00ACC1; }
+    .sec-weight  { background: #DDEEFF; border: 3px solid #5B9BD5; }
+    .sec-food    { background: #EDE7F6; border: 3px solid #7E57C2; }
+    .sec-water   { background: #E1F5FE; border: 3px solid #0288D1; }
+    .sec-urine   { background: #E8EAF6; border: 3px solid #3F51B5; }
+    .sec-walk    { background: #E0F2F1; border: 3px solid #00897B; }
+    .sec-photo   { background: #FFF3E0; border: 3px solid #FF9800; }
+    .sec-memo    { background: #FFF9C4; border: 3px solid #F9A825; }
 
     .sec-label {
       font-size: 0.84rem; font-weight: bold; margin-bottom: 10px;
       display: flex; align-items: center; gap: 5px;
     }
-    .sec-filaria .sec-label { color: #2E7D32; }
+    .sec-filaria .sec-label { color: #006064; }
     .sec-weight  .sec-label { color: #1565C0; }
-    .sec-food    .sec-label { color: #E65100; }
-    .sec-water   .sec-label { color: #6A1B9A; }
-    .sec-urine   .sec-label { color: #880E4F; }
-    .sec-walk    .sec-label { color: #33691E; }
-    .sec-photo   .sec-label { color: #BF360C; }
+    .sec-food    .sec-label { color: #4527A0; }
+    .sec-water   .sec-label { color: #01579B; }
+    .sec-urine   .sec-label { color: #1A237E; }
+    .sec-walk    .sec-label { color: #004D40; }
+    .sec-photo   .sec-label { color: #E65100; }
     .sec-memo    .sec-label { color: #F57F17; }
 
     /* フィラリアトグル */
     .filaria-toggle {
       display: flex; align-items: center; gap: 10px; cursor: pointer;
       background: white; border-radius: 12px; padding: 10px 12px;
-      border: 2px solid #A5D6A7;
+      border: 2px solid #80DEEA;
     }
-    .filaria-toggle input[type=checkbox] { width: 22px; height: 22px; accent-color: #43A047; cursor: pointer; flex-shrink: 0; }
-    .filaria-toggle-label { font-size: 0.88rem; color: #1B5E20; font-weight: bold; }
+    .filaria-toggle input[type=checkbox] { width: 22px; height: 22px; accent-color: #00ACC1; cursor: pointer; flex-shrink: 0; }
+    .filaria-toggle-label { font-size: 0.88rem; color: #006064; font-weight: bold; }
 
     /* 体重ステッパー */
     .weight-enable-row {
@@ -184,7 +184,7 @@
       background: white; border-radius: 12px; padding: 10px 12px;
       border: 2px solid #90CAF9;
     }
-    .weight-enable-row input[type=checkbox] { width: 22px; height: 22px; accent-color: #1E88E5; cursor: pointer; flex-shrink: 0; }
+    .weight-enable-row input[type=checkbox] { width: 22px; height: 22px; accent-color: #5B9BD5; cursor: pointer; flex-shrink: 0; }
     .weight-enable-label { font-size: 0.88rem; color: #1565C0; font-weight: bold; }
     .weight-stepper {
       display: flex; align-items: center; justify-content: center;
@@ -193,20 +193,20 @@
     .weight-stepper.hidden { display: none; }
     .wt-btn {
       width: 46px; height: 46px; border-radius: 50%;
-      border: 2.5px solid #1E88E5; background: white; color: #1565C0;
+      border: 2.5px solid #5B9BD5; background: white; color: #2D6A9F;
       font-size: 1.5rem; font-weight: bold; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 3px 0 #1565C0;
+      box-shadow: 0 3px 0 #2D6A9F;
       transition: transform 0.1s, box-shadow 0.1s; line-height: 1;
     }
     .wt-btn:active { transform: translateY(3px); box-shadow: none; }
     .wt-display {
-      background: white; border: 2.5px solid #1E88E5;
+      background: white; border: 2.5px solid #5B9BD5;
       border-radius: 14px; padding: 8px 18px;
       min-width: 110px; text-align: center;
-      box-shadow: 0 3px 0 #1565C0;
+      box-shadow: 0 3px 0 #2D6A9F;
     }
-    .wt-val  { font-size: 1.5rem; font-weight: bold; color: #1565C0; }
+    .wt-val  { font-size: 1.5rem; font-weight: bold; color: #2D6A9F; }
     .wt-unit { font-size: 0.82rem; color: #888; margin-left: 2px; }
 
     /* 選択ボタン共通 */
@@ -221,10 +221,11 @@
       transition: transform 0.1s, box-shadow 0.1s;
     }
     .btn-choice:active { transform: translateY(2px); box-shadow: none; }
-    .sec-food  .btn-choice.selected { background: #FF9800; border-color: #E65100; color: white; font-weight: bold; box-shadow: 0 3px 0 #BF360C; }
-    .sec-water .btn-choice.selected { background: #9C27B0; border-color: #6A1B9A; color: white; font-weight: bold; box-shadow: 0 3px 0 #4A148C; }
-    .sec-urine .btn-choice.selected { background: #E91E8C; border-color: #880E4F; color: white; font-weight: bold; box-shadow: 0 3px 0 #560027; }
-    .sec-walk  .btn-choice.selected { background: #7CB342; border-color: #33691E; color: white; font-weight: bold; box-shadow: 0 3px 0 #1B5E20; }
+
+    .sec-food  .btn-choice.selected { background: #7E57C2; border-color: #4527A0; color: white; font-weight: bold; box-shadow: 0 3px 0 #311B92; }
+    .sec-water .btn-choice.selected { background: #0288D1; border-color: #01579B; color: white; font-weight: bold; box-shadow: 0 3px 0 #01579B; }
+    .sec-urine .btn-choice.selected { background: #3F51B5; border-color: #1A237E; color: white; font-weight: bold; box-shadow: 0 3px 0 #0D47A1; }
+    .sec-walk  .btn-choice.selected { background: #00897B; border-color: #004D40; color: white; font-weight: bold; box-shadow: 0 3px 0 #00251A; }
     .btn-choice.alert-choice.selected {
       background: #E53935 !important; border-color: #B71C1C !important;
       color: white !important; box-shadow: 0 3px 0 #7F0000 !important;
@@ -233,13 +234,11 @@
     /* 写真 */
     .photo-preview {
       border-radius: 12px; overflow: hidden;
-      border: 2.5px solid #FF5722; margin-bottom: 10px;
+      border: 2.5px solid #FF9800; margin-bottom: 10px;
       position: relative;
     }
     .photo-preview.hidden { display: none; }
-    .photo-preview img {
-      width: 100%; max-height: 220px; object-fit: cover; display: block;
-    }
+    .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
     .photo-remove-btn {
       position: absolute; top: 8px; right: 8px;
       background: rgba(0,0,0,0.65); color: white;
@@ -249,21 +248,18 @@
     }
     .photo-add-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: white; border: 2.5px dashed #FF5722;
+      background: white; border: 2.5px dashed #FF9800;
       border-radius: 12px; padding: 16px 12px;
-      cursor: pointer; color: #BF360C;
+      cursor: pointer; color: #E65100;
       font-weight: bold; font-size: 0.9rem; width: 100%;
     }
     .photo-add-btn:active { opacity: 0.7; }
-    .photo-upload-progress {
-      font-size: 0.78rem; color: #FF5722; text-align: center;
-      margin-top: 6px; min-height: 18px; font-weight: bold;
-    }
+    .photo-upload-progress { font-size: 0.78rem; color: #FF9800; text-align: center; margin-top: 6px; min-height: 18px; font-weight: bold; }
 
     /* テキストエリア */
     .modal textarea {
       width: 100%; padding: 10px 12px;
-      border: 2.5px solid #FDD835; border-radius: 12px;
+      border: 2.5px solid #F9A825; border-radius: 12px;
       font-size: 0.88rem; font-family: inherit;
       resize: none; height: 68px; background: white;
     }
@@ -277,7 +273,7 @@
       transition: transform 0.1s, box-shadow 0.1s;
     }
     .modal-btn:active { transform: translateY(3px); box-shadow: none !important; }
-    .modal-btn.primary { background: #F06292; color: white; box-shadow: 0 5px 0 #C2185B; font-size: 1rem; letter-spacing: 0.05em; }
+    .modal-btn.primary { background: #5B9BD5; color: white; box-shadow: 0 5px 0 #2D6A9F; font-size: 1rem; letter-spacing: 0.05em; }
     .modal-btn.danger  { background: #FFCDD2; color: #C62828; border: 2px solid #EF9A9A; box-shadow: 0 3px 0 #EF9A9A; }
     .modal-btn.cancel  { background: #EEE; color: #888; box-shadow: 0 3px 0 #CCC; }
 
@@ -288,12 +284,12 @@
       font-size: 0.7rem; font-weight: bold;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 50;
     }
-    .conn-ok      { background: #C8E6C9; color: #1B5E20; border: 2px solid #4CAF50; }
+    .conn-ok      { background: #B2EBF2; color: #006064; border: 2px solid #00ACC1; }
     .conn-error   { background: #FFCDD2; color: #B71C1C; border: 2px solid #EF5350; }
-    .conn-loading { background: #E8EAF6; color: #4527A0; border: 2px solid #7986CB; }
+    .conn-loading { background: #DDEEFF; color: #1565C0; border: 2px solid #5B9BD5; }
     .spinner {
       display: inline-block; width: 11px; height: 11px;
-      border: 2px solid #9FA8DA; border-top-color: #3949AB;
+      border: 2px solid #90CAF9; border-top-color: #5B9BD5;
       border-radius: 50%; animation: spin 0.7s linear infinite;
       vertical-align: middle; margin-right: 3px;
     }
@@ -474,10 +470,9 @@ let dayCache = {};
 let unsubListener = null;
 let weightVal = DEFAULT_WEIGHT;
 
-// 写真状態
-let currentPhotoUrl  = null;  // 保存済みURL
-let currentPhotoFile = null;  // 新たに選択されたファイル
-let photoRemoved     = false; // 既存写真を削除する
+let currentPhotoUrl  = null;
+let currentPhotoFile = null;
+let photoRemoved     = false;
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const db      = firebase.firestore();
@@ -543,11 +538,7 @@ const photoProgressEl = document.getElementById('photoProgress');
 document.getElementById('photoInput').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) {
-    alert('10MB以下の画像を選択してください。');
-    e.target.value = '';
-    return;
-  }
+  if (file.size > 10 * 1024 * 1024) { alert('10MB以下の画像を選択してください。'); e.target.value = ''; return; }
   currentPhotoFile = file;
   photoRemoved = false;
   const reader = new FileReader();
@@ -569,9 +560,9 @@ document.getElementById('photoRemoveBtn').addEventListener('click', () => {
 });
 
 function setPhotoState(url) {
-  currentPhotoUrl  = url || null;
+  currentPhotoUrl = url || null;
   currentPhotoFile = null;
-  photoRemoved     = false;
+  photoRemoved = false;
   photoProgressEl.textContent = '';
   if (url) {
     photoImgEl.src = url;
@@ -585,12 +576,10 @@ function setPhotoState(url) {
 }
 
 async function handlePhotoSave() {
-  // 既存写真を削除
   if (photoRemoved && currentPhotoUrl) {
     try { await storage.refFromURL(currentPhotoUrl).delete(); } catch(e) { /* 無視 */ }
     return null;
   }
-  // 新しい写真をアップロード
   if (currentPhotoFile) {
     photoProgressEl.textContent = '📤 アップロード中...';
     const ref = storage.ref(`filaria-images/${currentModalDate}/image`);
@@ -599,7 +588,6 @@ async function handlePhotoSave() {
     photoProgressEl.textContent = '';
     return url;
   }
-  // 変更なし
   return currentPhotoUrl;
 }
 
@@ -631,7 +619,6 @@ function loadYearData() {
     );
 }
 
-// ---- フィラリアチップ ----
 function renderFilariaChips() {
   document.getElementById('yearLabel').textContent = `${currentYear}年`;
   const wrap = document.getElementById('filariaChips');
@@ -646,7 +633,6 @@ function renderFilariaChips() {
   });
 }
 
-// ---- カレンダー ----
 function renderCalendar() {
   document.getElementById('monthLabel').textContent = `${currentYear}年 ${MONTH_JP[currentMonth]}`;
   const grid = document.getElementById('calGrid');
@@ -676,7 +662,7 @@ function renderCalendar() {
     let dateColor = '#555';
     if (dow === 0) dateColor = '#E53935';
     if (dow === 6) dateColor = '#1E88E5';
-    if (isToday)   dateColor = '#C2185B';
+    if (isToday)   dateColor = '#1565C0';
 
     let dots = '';
     if (hasFilaria) dots += '<span class="cal-dot dot-filaria"></span>';
@@ -696,7 +682,6 @@ function renderCalendar() {
   }
 }
 
-// ---- モーダル ----
 function openModal(key, day) {
   currentModalDate = key;
   const rec = dayCache[key] || {};
@@ -725,10 +710,8 @@ function closeModal() {
 
 async function saveRecord() {
   if (!currentModalDate) return;
-
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = '保存中...';
-
   try {
     const filaria    = document.getElementById('filariaCheck').checked;
     const weight     = weightEnableEl.checked ? weightValueEl.textContent : null;
@@ -749,10 +732,7 @@ async function saveRecord() {
     if (imageUrl)   data.imageUrl   = imageUrl;
     if (healthMemo) data.healthMemo = healthMemo;
 
-    if (Object.keys(data).length === 0) {
-      alert('何か入力してから記録してください。');
-      return;
-    }
+    if (Object.keys(data).length === 0) { alert('何か入力してから記録してください。'); return; }
     await db.collection('filaria').doc(currentModalDate).set(data);
     closeModal();
   } catch(e) {
@@ -768,7 +748,6 @@ async function deleteRecord() {
   if (!currentModalDate) return;
   if (!confirm('この日の記録を削除しますか？')) return;
   try {
-    // 写真も削除
     const rec = dayCache[currentModalDate];
     if (rec?.imageUrl) {
       try { await storage.refFromURL(rec.imageUrl).delete(); } catch(e) { /* 無視 */ }
@@ -778,7 +757,6 @@ async function deleteRecord() {
   } catch(e) { alert('削除に失敗しました。\n' + e.message); }
 }
 
-// ---- イベント ----
 document.getElementById('prevYear').addEventListener('click',  () => { currentYear--; loadYearData(); });
 document.getElementById('nextYear').addEventListener('click',  () => { currentYear++; loadYearData(); });
 document.getElementById('prevMonth').addEventListener('click', () => {
