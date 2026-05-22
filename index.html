@@ -354,6 +354,65 @@
       padding: 24px 0; background: white; border-radius: 14px;
       border: 2px dashed #D6EAF8;
     }
+
+    /* ══ 項目別統計 ══ */
+    .stats-title {
+      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    }
+    .stat-card {
+      background: white; border-radius: 14px;
+      border: 2px solid #D6EAF8; padding: 12px 12px 8px;
+      margin-bottom: 8px;
+    }
+    .stat-card.stat-has-alert { border-color: #FFCDD2; }
+    .stat-card-title {
+      font-size: 0.8rem; font-weight: bold; color: #444;
+      margin-bottom: 10px;
+    }
+    .stat-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+    }
+    .stat-label {
+      font-size: 0.66rem; color: #666;
+      min-width: 90px; max-width: 90px; flex-shrink: 0;
+      line-height: 1.3;
+    }
+    .stat-bar-wrap {
+      flex: 1; background: #EEF5FB; border-radius: 6px;
+      height: 14px; overflow: hidden;
+    }
+    .stat-bar {
+      height: 100%; background: #5B9BD5;
+      border-radius: 6px; transition: width 0.4s ease;
+      min-width: 4px;
+    }
+    .stat-bar.bar-alert { background: #EF5350; }
+    .stat-bar.bar-best  { background: #26A69A; }
+    .stat-count {
+      font-size: 0.68rem; color: #888;
+      min-width: 22px; text-align: right; flex-shrink: 0;
+    }
+    .stat-count strong { color: #1565C0; }
+    .stat-count.cnt-alert strong { color: #C62828; }
+
+    /* 体重推移 */
+    .weight-trend { display: flex; flex-direction: column; gap: 6px; }
+    .wt-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.76rem; color: #555;
+    }
+    .wt-row-date { min-width: 52px; color: #999; }
+    .wt-row-val  { font-weight: bold; color: #1565C0; min-width: 44px; }
+    .wt-row-arrow { font-size: 0.68rem; font-weight: bold; }
+    .wt-up   { color: #1565C0; }
+    .wt-down { color: #C62828; }
+    .wt-same { color: #AAA; }
+    .wt-bar-wrap {
+      flex: 1; height: 10px; background: #EEF5FB;
+      border-radius: 5px; overflow: hidden;
+    }
+    .wt-bar { height: 100%; background: #90CAF9; border-radius: 5px; }
   </style>
 </head>
 <body>
@@ -735,6 +794,95 @@ function renderMonthSummary() {
     </div>
   `;
 
+  // ---- 項目別統計 ----
+  const CATS = [
+    { field:'food',  label:'🍽️ 食事量',
+      opts:['かなりよく食べた','よく食べた','普通','少なめ','食べなかった'],
+      alerts:['食べなかった'], best:['かなりよく食べた','よく食べた'] },
+    { field:'water', label:'💧 水の摂取量',
+      opts:['かなり多い','多い','普通','少なめ','飲まなかった'],
+      alerts:['飲まなかった'], best:['かなり多い','多い'] },
+    { field:'urine', label:'🚽 おしっこの様子',
+      opts:['かなり多い','多い','普通','少ない','血尿あり'],
+      alerts:['血尿あり'], best:['普通'] },
+    { field:'walk',  label:'🦮 散歩の様子',
+      opts:['かなり元気いっぱい','元気いっぱい','普通','乗り気じゃない','行きたがらない'],
+      alerts:['行きたがらない'], best:['かなり元気いっぱい','元気いっぱい'] },
+  ];
+
+  let statsHTML = `<div class="stats-title">📈 項目別統計</div>`;
+
+  for (const cat of CATS) {
+    const vals = records.map(([,r]) => r[cat.field]).filter(Boolean);
+    if (!vals.length) continue;
+
+    const counts = {};
+    cat.opts.forEach(o => counts[o] = 0);
+    vals.forEach(v => { if (v in counts) counts[v]++; });
+    const maxC = Math.max(...Object.values(counts), 1);
+    const hasAlert = cat.alerts.some(a => counts[a] > 0);
+
+    const rows = cat.opts.map(opt => {
+      const c = counts[opt];
+      if (!c) return '';
+      const pct = Math.round((c / maxC) * 100);
+      const isAlert = cat.alerts.includes(opt);
+      const isBest  = cat.best.includes(opt);
+      const barCls  = isAlert ? 'bar-alert' : isBest ? 'bar-best' : '';
+      return `
+        <div class="stat-row">
+          <div class="stat-label">${opt}</div>
+          <div class="stat-bar-wrap">
+            <div class="stat-bar ${barCls}" style="width:${pct}%"></div>
+          </div>
+          <div class="stat-count ${isAlert?'cnt-alert':''}"><strong>${c}</strong>日</div>
+        </div>`;
+    }).join('');
+
+    statsHTML += `
+      <div class="stat-card${hasAlert?' stat-has-alert':''}">
+        <div class="stat-card-title">${cat.label}（記録${vals.length}日分）</div>
+        ${rows}
+      </div>`;
+  }
+
+  // 体重推移
+  const wtRecs = records.filter(([,r]) => r.weight);
+  if (wtRecs.length >= 2) {
+    const wMin = Math.min(...wtRecs.map(([,r]) => parseFloat(r.weight)));
+    const wMax = Math.max(...wtRecs.map(([,r]) => parseFloat(r.weight)));
+    const wRange = wMax - wMin || 1;
+
+    const wtRows = wtRecs.map(([k,r], i) => {
+      const d   = parseInt(k.split('-')[2]);
+      const val = parseFloat(r.weight);
+      const barPct = Math.round(((val - wMin) / wRange) * 100);
+      let arrowHtml = '';
+      if (i > 0) {
+        const prev = parseFloat(wtRecs[i-1][1].weight);
+        const diff = (val - prev).toFixed(1);
+        if      (diff > 0) arrowHtml = `<span class="wt-row-arrow wt-up">▲${diff}kg</span>`;
+        else if (diff < 0) arrowHtml = `<span class="wt-row-arrow wt-down">▼${Math.abs(diff)}kg</span>`;
+        else               arrowHtml = `<span class="wt-row-arrow wt-same">変化なし</span>`;
+      }
+      return `
+        <div class="wt-row">
+          <span class="wt-row-date">${currentMonth}/${d}日</span>
+          <span class="wt-row-val">${val.toFixed(1)}kg</span>
+          <div class="wt-bar-wrap">
+            <div class="wt-bar" style="width:${Math.max(barPct,4)}%"></div>
+          </div>
+          ${arrowHtml}
+        </div>`;
+    }).join('');
+
+    statsHTML += `
+      <div class="stat-card">
+        <div class="stat-card-title">⚖️ 体重の推移（最小 ${wMin}kg ／ 最大 ${wMax}kg）</div>
+        <div class="weight-trend">${wtRows}</div>
+      </div>`;
+  }
+
   // ---- 日別一覧 ----
   let listHTML = `<div class="daylist-title">📋 日別記録一覧</div>`;
 
@@ -764,7 +912,7 @@ function renderMonthSummary() {
     `;
   }
 
-  container.innerHTML = summaryHTML + listHTML;
+  container.innerHTML = summaryHTML + statsHTML + listHTML;
 
   container.querySelectorAll('.day-item').forEach(el => {
     el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
