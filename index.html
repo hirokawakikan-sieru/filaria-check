@@ -294,6 +294,66 @@
       vertical-align: middle; margin-right: 3px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══ 月次サマリー＆日別一覧 ══ */
+    .month-summary { padding: 0 10px 28px; }
+
+    .summary-card {
+      background: white; border-radius: 16px;
+      border: 3px solid #5B9BD5; box-shadow: 0 3px 0 #2D6A9F;
+      padding: 14px 14px 12px; margin-bottom: 12px;
+    }
+    .summary-card-title {
+      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 5px;
+    }
+    .summary-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .s-item {
+      background: #EBF4FF; border-radius: 12px;
+      padding: 8px 12px; text-align: center;
+      min-width: 64px; border: 2px solid #AACDE8;
+    }
+    .s-item.s-alert { background: #FFEBEE; border-color: #EF9A9A; }
+    .s-val { font-size: 1.1rem; font-weight: bold; color: #1565C0; line-height: 1.3; }
+    .s-item.s-alert .s-val { color: #C62828; }
+    .s-lbl { font-size: 0.62rem; color: #999; margin-top: 2px; }
+
+    .daylist-title {
+      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    }
+    .day-item {
+      background: white; border-radius: 14px;
+      border: 2px solid #D6EAF8; padding: 10px 12px;
+      margin-bottom: 7px; cursor: pointer;
+      transition: opacity 0.1s;
+    }
+    .day-item:active { opacity: 0.65; }
+    .day-item.day-alert { border-color: #FFCDD2; background: #FFF8F8; }
+    .day-item-hd {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
+    }
+    .day-item-date { font-size: 0.85rem; font-weight: bold; color: #2D6A9F; flex: 1; }
+    .day-edit-hint { font-size: 0.7rem; color: #BBBBBB; }
+    .day-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+    .dbadge {
+      font-size: 0.68rem; padding: 3px 8px; border-radius: 20px; font-weight: bold;
+    }
+    .db-filaria { background: #B2EBF2; color: #006064; }
+    .db-weight  { background: #BBDEFB; color: #1565C0; }
+    .db-food    { background: #EDE7F6; color: #4527A0; }
+    .db-water   { background: #B3E5FC; color: #01579B; }
+    .db-urine   { background: #C5CAE9; color: #1A237E; }
+    .db-walk    { background: #DCEDC8; color: #33691E; }
+    .db-photo   { background: #FFE0B2; color: #E65100; }
+    .db-memo    { background: #FFF9C4; color: #F57F17; }
+    .db-alert   { background: #FFCDD2 !important; color: #B71C1C !important; }
+
+    .no-records {
+      text-align: center; color: #BBB; font-size: 0.82rem;
+      padding: 24px 0; background: white; border-radius: 14px;
+      border: 2px dashed #D6EAF8;
+    }
   </style>
 </head>
 <body>
@@ -340,6 +400,9 @@
   <div class="legend-item"><span class="cal-dot dot-alert"   style="display:inline-block"></span>要注意</div>
   <div class="legend-item">📷 写真あり</div>
 </div>
+
+<!-- 月次サマリー＆日別一覧 -->
+<div class="month-summary" id="monthSummary"></div>
 
 <!-- モーダル -->
 <div class="modal-overlay hidden" id="modalOverlay">
@@ -613,6 +676,7 @@ function loadYearData() {
         });
         renderFilariaChips();
         renderCalendar();
+        renderMonthSummary();
         setConn('ok', '✅ 接続済み');
       },
       err => { console.error(err); setConn('error', '❌ 接続エラー'); }
@@ -630,6 +694,80 @@ function renderFilariaChips() {
     chip.className = 'f-chip' + (done ? ' done' : '');
     chip.innerHTML = `<span class="f-ico">${done ? '✅' : '⬜'}</span><span>${m}月</span>`;
     wrap.appendChild(chip);
+  });
+}
+
+// ---- 月次サマリー＆日別一覧 ----
+function renderMonthSummary() {
+  const container = document.getElementById('monthSummary');
+  const prefix = `${currentYear}-${String(currentMonth).padStart(2,'0')}-`;
+  const records = Object.entries(dayCache)
+    .filter(([k]) => k.startsWith(prefix))
+    .sort(([a],[b]) => a.localeCompare(b));
+
+  if (records.length === 0) {
+    container.innerHTML = `<div class="no-records">📭 この月の記録はまだありません</div>`;
+    return;
+  }
+
+  // ---- 集計 ----
+  const totalDays   = records.length;
+  const filariaCount = records.filter(([,r]) => r.filaria).length;
+  const weights     = records.filter(([,r]) => r.weight).map(([,r]) => parseFloat(r.weight));
+  const avgWeight   = weights.length ? (weights.reduce((s,v) => s+v, 0)/weights.length).toFixed(1) : null;
+  const latestWeight = weights.length ? weights[weights.length-1].toFixed(1) : null;
+  const alertDays   = records.filter(([,r]) =>
+    r.food==='食べなかった' || r.water==='飲まなかった' || r.urine==='血尿あり' || r.walk==='行きたがらない'
+  ).length;
+  const photoDays   = records.filter(([,r]) => r.imageUrl).length;
+
+  let summaryHTML = `
+    <div class="summary-card">
+      <div class="summary-card-title">📊 今月の集計</div>
+      <div class="summary-grid">
+        <div class="s-item"><div class="s-val">${totalDays}日</div><div class="s-lbl">記録日数</div></div>
+        <div class="s-item"><div class="s-val">${filariaCount}回</div><div class="s-lbl">💊 投薬</div></div>
+        ${latestWeight ? `<div class="s-item"><div class="s-val">${latestWeight}kg</div><div class="s-lbl">⚖️ 最新体重</div></div>` : ''}
+        ${avgWeight && weights.length > 1 ? `<div class="s-item"><div class="s-val">${avgWeight}kg</div><div class="s-lbl">⚖️ 平均体重</div></div>` : ''}
+        ${alertDays > 0 ? `<div class="s-item s-alert"><div class="s-val">${alertDays}日</div><div class="s-lbl">⚠️ 要注意</div></div>` : ''}
+        ${photoDays > 0 ? `<div class="s-item"><div class="s-val">${photoDays}枚</div><div class="s-lbl">📷 写真</div></div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // ---- 日別一覧 ----
+  let listHTML = `<div class="daylist-title">📋 日別記録一覧</div>`;
+
+  for (const [key, rec] of records) {
+    const d   = parseInt(key.split('-')[2]);
+    const dow = DOW_JP[new Date(currentYear, currentMonth-1, d).getDay()];
+    const isAlert = rec.food==='食べなかった' || rec.water==='飲まなかった' || rec.urine==='血尿あり' || rec.walk==='行きたがらない';
+
+    let badges = '';
+    if (rec.filaria)    badges += `<span class="dbadge db-filaria">💊 投薬済み</span>`;
+    if (rec.weight)     badges += `<span class="dbadge db-weight">⚖️ ${rec.weight}kg</span>`;
+    if (rec.food)       badges += `<span class="dbadge db-food${rec.food==='食べなかった'?' db-alert':''}">🍽️ ${rec.food}</span>`;
+    if (rec.water)      badges += `<span class="dbadge db-water${rec.water==='飲まなかった'?' db-alert':''}">💧 ${rec.water}</span>`;
+    if (rec.urine)      badges += `<span class="dbadge db-urine${rec.urine==='血尿あり'?' db-alert':''}">🚽 ${rec.urine}</span>`;
+    if (rec.walk)       badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${rec.walk}</span>`;
+    if (rec.imageUrl)   badges += `<span class="dbadge db-photo">📷 写真あり</span>`;
+    if (rec.healthMemo) badges += `<span class="dbadge db-memo">📋 ${rec.healthMemo.length>18 ? rec.healthMemo.substring(0,18)+'…' : rec.healthMemo}</span>`;
+
+    listHTML += `
+      <div class="day-item${isAlert?' day-alert':''}" data-key="${key}" data-day="${d}">
+        <div class="day-item-hd">
+          <span class="day-item-date">${currentMonth}月${d}日（${dow}）${isAlert?'⚠️':''}</span>
+          <span class="day-edit-hint">タップして編集 ✏️</span>
+        </div>
+        <div class="day-badges">${badges}</div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = summaryHTML + listHTML;
+
+  container.querySelectorAll('.day-item').forEach(el => {
+    el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
   });
 }
 
@@ -761,11 +899,11 @@ document.getElementById('prevYear').addEventListener('click',  () => { currentYe
 document.getElementById('nextYear').addEventListener('click',  () => { currentYear++; loadYearData(); });
 document.getElementById('prevMonth').addEventListener('click', () => {
   if (currentMonth === 1)  { currentMonth = 12; currentYear--; loadYearData(); }
-  else { currentMonth--; renderCalendar(); }
+  else { currentMonth--; renderCalendar(); renderMonthSummary(); }
 });
 document.getElementById('nextMonth').addEventListener('click', () => {
   if (currentMonth === 12) { currentMonth = 1; currentYear++; loadYearData(); }
-  else { currentMonth++; renderCalendar(); }
+  else { currentMonth++; renderCalendar(); renderMonthSummary(); }
 });
 document.getElementById('saveBtn').addEventListener('click',    saveRecord);
 document.getElementById('deleteBtn').addEventListener('click',  deleteRecord);
