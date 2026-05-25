@@ -196,6 +196,7 @@
     .db-filaria { background: #B2EBF2; color: #006064; }
     .db-weight { background: #BBDEFB; color: #1565C0; }
     .db-food { background: #EDE7F6; color: #4527A0; }
+    .db-vomit { background: #FFECB3; color: #E65100; }
     .db-water { background: #B3E5FC; color: #01579B; }
     .db-urine { background: #C5CAE9; color: #1A237E; }
     .db-night { background: #D1C4E9; color: #311B92; }
@@ -223,6 +224,7 @@
     .sec-filaria { background: #E0F7FA; border: 3px solid #00ACC1; }
     .sec-weight { background: #DDEEFF; border: 3px solid #5B9BD5; }
     .sec-food { background: #EDE7F6; border: 3px solid #7E57C2; }
+    .sec-vomit { background: #FFF8E1; border: 3px solid #FFB300; }
     .sec-water { background: #E1F5FE; border: 3px solid #0288D1; }
     .sec-urine { background: #E8EAF6; border: 3px solid #3F51B5; }
     .sec-night { background: #F3E5F5; border: 3px solid #8E24AA; }
@@ -257,11 +259,22 @@
       border: 2px solid #DDD; background: white; color: #666; box-shadow: 0 2px 0 #CCC;
     }
     .sec-food .btn-choice.selected { background: #7E57C2; border-color: #4527A0; color: white; font-weight: bold; box-shadow: 0 3px 0 #311B92; }
+    .sec-vomit .btn-choice.selected { background: #FFB300; border-color: #E65100; color: white; font-weight: bold; box-shadow: 0 3px 0 #E65100; }
     .sec-water .btn-choice.selected { background: #0288D1; border-color: #01579B; color: white; font-weight: bold; box-shadow: 0 3px 0 #01579B; }
     .sec-urine .btn-choice.selected { background: #3F51B5; border-color: #1A237E; color: white; font-weight: bold; box-shadow: 0 3px 0 #0D47A1; }
     .sec-night .btn-choice.selected { background: #8E24AA; border-color: #4A148C; color: white; font-weight: bold; box-shadow: 0 3px 0 #4A148C; }
     .sec-walk .btn-choice.selected { background: #00897B; border-color: #004D40; color: white; font-weight: bold; box-shadow: 0 3px 0 #00251A; }
     .btn-choice.alert-choice.selected { background: #E53935 !important; border-color: #B71C1C !important; color: white !important; box-shadow: 0 3px 0 #7F0000 !important; }
+    .water-amount-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 10px;
+      background: white; border: 2px solid #81D4FA; border-radius: 12px; padding: 9px 10px;
+    }
+    .water-amount-row label { font-size: 0.78rem; color: #01579B; font-weight: bold; flex-shrink: 0; }
+    .water-amount-row input {
+      min-width: 0; flex: 1; border: 2px solid #B3E5FC; border-radius: 10px;
+      padding: 8px 10px; font-size: 0.9rem; text-align: right;
+    }
+    .water-amount-row span { font-size: 0.76rem; color: #777; font-weight: bold; }
     .photo-preview { border-radius: 12px; overflow: hidden; border: 2.5px solid #FF9800; margin-bottom: 10px; position: relative; }
     .photo-preview.hidden { display: none; }
     .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
@@ -426,6 +439,16 @@
       </div>
     </div>
 
+    <div class="sec-card sec-vomit">
+      <div class="sec-label">🤢 吐き気・嘔吐</div>
+      <div class="btn-group" id="vomitGroup">
+        <button class="btn-choice" data-val="なし">✅ なし</button>
+        <button class="btn-choice" data-val="吐き気あり">😐 吐き気あり</button>
+        <button class="btn-choice alert-choice" data-val="嘔吐1回">⚠️ 嘔吐1回</button>
+        <button class="btn-choice alert-choice" data-val="嘔吐2回以上">🚨 嘔吐2回以上</button>
+      </div>
+    </div>
+
     <div class="sec-card sec-water">
       <div class="sec-label">💧 水の摂取量</div>
       <div class="btn-group" id="waterGroup">
@@ -434,6 +457,11 @@
         <button class="btn-choice" data-val="普通">👍 普通</button>
         <button class="btn-choice" data-val="少なめ">😐 少なめ</button>
         <button class="btn-choice alert-choice" data-val="飲まなかった">😟 飲まなかった</button>
+      </div>
+      <div class="water-amount-row">
+        <label for="waterMlInput">飲水量</label>
+        <input id="waterMlInput" type="number" inputmode="numeric" min="0" max="3000" step="10" placeholder="任意">
+        <span>ml/日</span>
       </div>
     </div>
 
@@ -547,7 +575,7 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-['foodGroup','waterGroup','urineGroup','nightAccidentGroup','walkGroup'].forEach(gid => {
+['foodGroup','vomitGroup','waterGroup','urineGroup','nightAccidentGroup','walkGroup'].forEach(gid => {
   document.getElementById(gid).querySelectorAll('.btn-choice').forEach(btn => {
     btn.addEventListener('click', () => {
       const was = btn.classList.contains('selected');
@@ -559,6 +587,7 @@ const storage = firebase.storage();
 
 document.getElementById('quickNormalBtn').addEventListener('click', () => {
   setChoice('foodGroup', '普通');
+  setChoice('vomitGroup', 'なし');
   setChoice('waterGroup', '普通');
   setChoice('urineGroup', '普通');
   setChoice('nightAccidentGroup', 'なし');
@@ -751,15 +780,15 @@ function reportRangeLabel() {
 function getTodayRecordState() {
   const isThisMonth = currentYear === todayObj.getFullYear() && currentMonth === todayObj.getMonth() + 1;
   const rec = isThisMonth ? dayCache[todayKey] : null;
-  const hasAny = !!(rec && (rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo));
+  const hasAny = !!(rec && (rec.filaria || rec.weight || rec.food || rec.vomit || rec.water || rec.waterMl || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo));
   return { isThisMonth, rec, hasAny };
 }
 
 function hasUrgentAlert(rec) {
-  return rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.nightAccident === 'あり大量' || rec.walk === '行きたがらない';
+  return rec.food === '食べなかった' || rec.vomit === '嘔吐2回以上' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.nightAccident === 'あり大量' || rec.walk === '行きたがらない';
 }
 function hasSoftAlert(rec) {
-  return rec.food === '少なめ' || rec.water === 'かなり多い' || rec.urine === '少ない' || rec.urine === 'かなり多い' || rec.nightAccident === 'あり少な目' || rec.walk === '乗り気じゃない';
+  return rec.food === '少なめ' || rec.vomit === '吐き気あり' || rec.vomit === '嘔吐1回' || rec.water === 'かなり多い' || rec.urine === '少ない' || rec.urine === 'かなり多い' || rec.nightAccident === 'あり少な目' || rec.walk === '乗り気じゃない';
 }
 function memoHits(memo) {
   if (!memo) return [];
@@ -837,7 +866,11 @@ function detectHealthAlerts(records) {
 
   records.forEach(([key, rec]) => {
     if (rec.food === '食べなかった') add('high', `${dayLabel(key)} 食事を食べなかった記録があります`, '食欲の低下は診察時に伝えたい大事な情報です。', [key]);
+    if (rec.vomit === '嘔吐2回以上') add('high', `${dayLabel(key)} 嘔吐が2回以上あります`, '腎臓病の診察で優先して伝えたい症状です。', [key]);
+    if (rec.vomit === '嘔吐1回') add('medium', `${dayLabel(key)} 嘔吐が1回あります`, '食欲や飲水量の変化と一緒に見返せます。', [key]);
+    if (rec.vomit === '吐き気あり') add('medium', `${dayLabel(key)} 吐き気の記録があります`, '口をくちゃくちゃする、よだれ、食欲低下などがあればメモに残すと役立ちます。', [key]);
     if (rec.water === '飲まなかった') add('high', `${dayLabel(key)} 水を飲まなかった記録があります`, '飲水量の低下が続く場合は注意してください。', [key]);
+    if (rec.waterMl) add('low', `${dayLabel(key)} 飲水量 ${rec.waterMl}ml`, '数値の飲水量は腎臓病の経過確認に役立ちます。', [key]);
     if (rec.urine === '血尿あり') add('high', `${dayLabel(key)} 血尿の記録があります`, '血尿は病院で必ず伝えたい項目です。', [key]);
     if (rec.nightAccident === 'あり大量') add('medium', `${dayLabel(key)} 夜間おむつのおもらしが大量です`, '夜間の尿量変化として、飲水量やおしっこの様子と一緒に見返せます。', [key]);
     if (rec.walk === '行きたがらない') add('high', `${dayLabel(key)} 散歩に行きたがらない記録があります`, '痛みや体調不良のサインとして見返せます。', [key]);
@@ -850,6 +883,8 @@ function detectHealthAlerts(records) {
 
   [
     { field:'food', value:'少なめ', label:'食事が少なめ' },
+    { field:'vomit', value:'吐き気あり', label:'吐き気' },
+    { field:'vomit', value:'嘔吐1回', label:'嘔吐' },
     { field:'water', value:'かなり多い', label:'水をかなり多く飲む' },
     { field:'urine', value:'少ない', label:'おしっこが少ない' },
     { field:'urine', value:'かなり多い', label:'おしっこがかなり多い' },
@@ -1066,6 +1101,7 @@ function bindSummaryActions(container) {
 function renderStats(records) {
   const CATS = [
     { field:'food', label:'🍽️ 食事量', opts:['かなりよく食べた','よく食べた','普通','少なめ','食べなかった'], alerts:['食べなかった'], best:['かなりよく食べた','よく食べた'] },
+    { field:'vomit', label:'🤢 吐き気・嘔吐', opts:['なし','吐き気あり','嘔吐1回','嘔吐2回以上'], alerts:['嘔吐1回','嘔吐2回以上'], best:['なし'] },
     { field:'water', label:'💧 水の摂取量', opts:['かなり多い','多い','普通','少なめ','飲まなかった'], alerts:['飲まなかった'], best:['普通'] },
     { field:'urine', label:'🚽 おしっこの様子', opts:['かなり多い','多い','普通','少ない','血尿あり'], alerts:['血尿あり'], best:['普通'] },
     { field:'nightAccident', label:'🌙 夜間おむつのおもらし', opts:['あり大量','あり少な目','なし'], alerts:['あり大量'], best:['なし'] },
@@ -1151,7 +1187,9 @@ function renderDayList(records) {
     if (rec.filaria) badges += `<span class="dbadge db-filaria">💊 投薬済み</span>`;
     if (rec.weight) badges += `<span class="dbadge db-weight">⚖️ ${esc(rec.weight)}kg</span>`;
     if (rec.food) badges += `<span class="dbadge db-food${rec.food==='食べなかった'?' db-alert':''}">🍽️ ${esc(rec.food)}</span>`;
+    if (rec.vomit) badges += `<span class="dbadge db-vomit${rec.vomit==='嘔吐1回'||rec.vomit==='嘔吐2回以上'?' db-alert':''}">🤢 ${esc(rec.vomit)}</span>`;
     if (rec.water) badges += `<span class="dbadge db-water${rec.water==='飲まなかった'?' db-alert':''}">💧 ${esc(rec.water)}</span>`;
+    if (rec.waterMl) badges += `<span class="dbadge db-water">💧 ${esc(rec.waterMl)}ml</span>`;
     if (rec.urine) badges += `<span class="dbadge db-urine${rec.urine==='血尿あり'?' db-alert':''}">🚽 ${esc(rec.urine)}</span>`;
     if (rec.nightAccident) badges += `<span class="dbadge db-night${rec.nightAccident==='あり大量'?' db-alert':''}">🌙 おもらし ${esc(rec.nightAccident)}</span>`;
     if (rec.walk) badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${esc(rec.walk)}</span>`;
@@ -1187,7 +1225,7 @@ function renderCalendar() {
     const hasFilaria = !!rec?.filaria;
     const hasWeight = !!rec?.weight;
     const hasPhoto = !!rec?.imageUrl;
-    const hasHealth = rec && (rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.healthMemo);
+    const hasHealth = rec && (rec.food || rec.vomit || rec.water || rec.waterMl || rec.urine || rec.nightAccident || rec.walk || rec.healthMemo);
     const isAlert = rec && (hasUrgentAlert(rec) || hasSoftAlert(rec) || memoHits(rec.healthMemo).length);
     const hasAny = hasFilaria || hasWeight || hasHealth || hasPhoto;
     const dow = (firstDow + d - 1) % 7;
@@ -1216,14 +1254,16 @@ function openModal(key, day) {
   document.getElementById('filariaCheck').checked = !!rec.filaria;
   setWeightState(rec.weight || null);
   setChoice('foodGroup', rec.food || null);
+  setChoice('vomitGroup', rec.vomit || null);
   setChoice('waterGroup', rec.water || null);
+  document.getElementById('waterMlInput').value = rec.waterMl || '';
   setChoice('urineGroup', rec.urine || null);
   setChoice('nightAccidentGroup', rec.nightAccident || null);
   setChoice('walkGroup', rec.walk || null);
   setPhotoState(rec.imageUrl || null);
   document.getElementById('healthMemoInput').value = rec.healthMemo || '';
   updateMemoAlertBox();
-  const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo;
+  const hasAny = rec.filaria || rec.weight || rec.food || rec.vomit || rec.water || rec.waterMl || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo;
   document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
   document.getElementById('modalOverlay').classList.remove('hidden');
   document.getElementById('modalBody').scrollTop = 0;
@@ -1241,7 +1281,10 @@ async function saveRecord() {
     const filaria = document.getElementById('filariaCheck').checked;
     const weight = weightEnableEl.checked ? weightValueEl.textContent : null;
     const food = getChoice('foodGroup');
+    const vomit = getChoice('vomitGroup');
     const water = getChoice('waterGroup');
+    const waterMlRaw = document.getElementById('waterMlInput').value;
+    const waterMl = waterMlRaw ? String(Math.max(0, Math.min(3000, parseInt(waterMlRaw, 10) || 0))) : null;
     const urine = getChoice('urineGroup');
     const nightAccident = getChoice('nightAccidentGroup');
     const walk = getChoice('walkGroup');
@@ -1251,7 +1294,9 @@ async function saveRecord() {
     if (filaria) data.filaria = true;
     if (weight) data.weight = weight;
     if (food) data.food = food;
+    if (vomit) data.vomit = vomit;
     if (water) data.water = water;
+    if (waterMl) data.waterMl = waterMl;
     if (urine) data.urine = urine;
     if (nightAccident) data.nightAccident = nightAccident;
     if (walk) data.walk = walk;
@@ -1334,6 +1379,8 @@ function buildReportHtml(records) {
       <div class="report-note">フィラリア投薬: ${filariaDays.length ? esc(filariaDays.join('、')) : 'この期間の投薬記録なし'}</div>
     </div>
 
+    ${renderKidneyFocusSection(records, weights)}
+
     <div class="report-section">
       <h3>重要な変化</h3>
       <div class="report-alert-list">
@@ -1365,7 +1412,9 @@ function buildReportHtml(records) {
             ${r.weight ? `体重: ${esc(r.weight)}kg　` : ''}
             ${r.filaria ? 'フィラリア: 投薬済み　' : ''}
             ${r.food ? `食事: ${esc(r.food)}　` : ''}
+            ${r.vomit ? `吐き気・嘔吐: ${esc(r.vomit)}　` : ''}
             ${r.water ? `水: ${esc(r.water)}　` : ''}
+            ${r.waterMl ? `飲水量: ${esc(r.waterMl)}ml　` : ''}
             ${r.urine ? `おしっこ: ${esc(r.urine)}　` : ''}
             ${r.nightAccident ? `夜間おむつ: ${esc(r.nightAccident)}　` : ''}
             ${r.walk ? `散歩: ${esc(r.walk)}　` : ''}
@@ -1377,6 +1426,45 @@ function buildReportHtml(records) {
 
     <div class="report-note">このレポートは記録を整理するためのものです。診断ではないため、気になる症状がある場合は獣医師に相談してください。</div>
   `;
+}
+
+function countRecords(records, predicate) {
+  return records.filter(([,r]) => predicate(r)).length;
+}
+function renderKidneyFocusSection(records, weights) {
+  const waterMlRecords = records
+    .filter(([,r]) => r.waterMl)
+    .map(([k,r]) => [k, parseInt(r.waterMl, 10)])
+    .filter(([,v]) => !Number.isNaN(v));
+  const latestWaterMl = waterMlRecords.length ? `${waterMlRecords[waterMlRecords.length-1][1]}ml（${dayLabel(waterMlRecords[waterMlRecords.length-1][0])}）` : '記録なし';
+  const avgWaterMl = waterMlRecords.length ? `${Math.round(waterMlRecords.reduce((s,[,v]) => s + v, 0) / waterMlRecords.length)}ml/日` : '記録なし';
+  const weightSummary = weights.length >= 2
+    ? `${weights[0][1].toFixed(1)}kg → ${weights[weights.length-1][1].toFixed(1)}kg（${(weights[weights.length-1][1] - weights[0][1] >= 0 ? '+' : '')}${(weights[weights.length-1][1] - weights[0][1]).toFixed(1)}kg）`
+    : weights.length === 1 ? `${weights[0][1].toFixed(1)}kg（${dayLabel(weights[0][0])}）` : '記録なし';
+  const appetiteLow = countRecords(records, r => r.food === '少なめ' || r.food === '食べなかった');
+  const vomitDays = countRecords(records, r => r.vomit && r.vomit !== 'なし');
+  const waterHigh = countRecords(records, r => r.water === 'かなり多い' || r.water === '多い');
+  const urineHigh = countRecords(records, r => r.urine === 'かなり多い' || r.urine === '多い');
+  const urineLow = countRecords(records, r => r.urine === '少ない');
+  const nightLarge = countRecords(records, r => r.nightAccident === 'あり大量');
+  const nightSmall = countRecords(records, r => r.nightAccident === 'あり少な目');
+  const lowEnergy = countRecords(records, r => r.walk === '乗り気じゃない' || r.walk === '行きたがらない');
+
+  return `
+    <div class="report-section">
+      <h3>腎臓病フォーカス</h3>
+      <div class="report-kpis">
+        <div class="report-kpi"><strong>${esc(weightSummary)}</strong><span>体重変化</span></div>
+        <div class="report-kpi"><strong>${esc(latestWaterMl)}</strong><span>最新飲水量</span></div>
+        <div class="report-kpi"><strong>${esc(avgWaterMl)}</strong><span>平均飲水量</span></div>
+        <div class="report-kpi"><strong>${appetiteLow}日</strong><span>食欲低下</span></div>
+        <div class="report-kpi"><strong>${vomitDays}日</strong><span>吐き気・嘔吐</span></div>
+        <div class="report-kpi"><strong>${waterHigh}日</strong><span>飲水多め</span></div>
+        <div class="report-kpi"><strong>${urineHigh}日 / ${urineLow}日</strong><span>尿 多い / 少ない</span></div>
+        <div class="report-kpi"><strong>大量${nightLarge}日 / 少な目${nightSmall}日</strong><span>夜間おもらし</span></div>
+      </div>
+      <div class="report-note">元気・散歩不調: ${lowEnergy}日。腎臓病の経過確認として、飲水量、尿量、食欲、嘔吐、体重変化を優先してまとめています。</div>
+    </div>`;
 }
 function openVetReport() {
   const records = getReportRecords();
