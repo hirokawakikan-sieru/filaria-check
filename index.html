@@ -9,7 +9,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
       background-color: #EAF4FB;
@@ -18,8 +17,6 @@
       min-height: 100vh;
       color: #2C3E50;
     }
-
-    /* ══ ヘッダー ══ */
     header {
       background: #5B9BD5;
       color: white;
@@ -28,453 +25,341 @@
       box-shadow: 0 4px 0 #2D6A9F;
     }
     header h1 { font-size: 1.25rem; font-weight: bold; letter-spacing: 0.04em; margin-bottom: 4px; }
-    header p  { font-size: 0.76rem; opacity: 0.92; }
-
-    /* ══ 年ナビ ══ */
-    .year-nav {
+    header p { font-size: 0.76rem; opacity: 0.92; }
+    button, textarea { font-family: inherit; }
+    .year-nav, .month-nav {
       display: flex; align-items: center; justify-content: center; gap: 14px;
       padding: 10px 16px;
-      background: #DEEEFF;
-      border-bottom: 3px solid #5B9BD5;
     }
-    .year-nav button {
-      background: white; border: 2.5px solid #5B9BD5; border-radius: 50px;
-      padding: 5px 16px; font-size: 0.95rem; cursor: pointer;
-      color: #2D6A9F; font-family: inherit; font-weight: bold;
-      box-shadow: 0 3px 0 #5B9BD5;
+    .year-nav { background: #DEEEFF; border-bottom: 3px solid #5B9BD5; }
+    .month-nav {
+      margin: 10px 10px 0; background: white; border-radius: 16px;
+      border: 3px solid #5B9BD5; box-shadow: 0 3px 0 #2D6A9F;
+    }
+    .year-nav button, .month-nav button {
+      border-radius: 50px; cursor: pointer; font-weight: bold;
       transition: transform 0.1s, box-shadow 0.1s;
     }
-    .year-nav button:active { transform: translateY(3px); box-shadow: none; }
+    .year-nav button {
+      background: white; border: 2.5px solid #5B9BD5; padding: 5px 16px;
+      color: #2D6A9F; box-shadow: 0 3px 0 #5B9BD5;
+    }
+    .month-nav button {
+      background: #5B9BD5; border: none; padding: 9px 20px;
+      font-size: 1.1rem; color: white; box-shadow: 0 4px 0 #2D6A9F;
+    }
+    .year-nav button:active, .month-nav button:active { transform: translateY(3px); box-shadow: none; }
     .year-nav-label { font-size: 0.95rem; font-weight: bold; color: #2D6A9F; min-width: 70px; text-align: center; }
+    .month-nav-label { font-size: 1.1rem; font-weight: bold; color: #333; min-width: 115px; text-align: center; }
 
-    /* ══ フィラリア進捗 ══ */
     .filaria-bar {
-      background: white; margin: 10px 10px 0;
-      padding: 12px 14px 14px; border-radius: 16px;
+      background: white; margin: 10px 10px 0; padding: 12px 14px 14px; border-radius: 16px;
       border: 3px solid #00ACC1; box-shadow: 0 3px 0 #00838F;
     }
     .filaria-bar-title { font-size: 0.74rem; font-weight: bold; color: #00695C; margin-bottom: 10px; text-align: center; }
-    .filaria-chips { display: flex; gap: 5px; justify-content: center; }
+    .filaria-chips { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
     .f-chip {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
-      font-size: 0.62rem; color: #aaa; min-width: 30px;
-      padding: 5px 4px; border-radius: 10px;
-      background: #F5F5F5; border: 2px solid #E0E0E0; font-weight: bold;
+      font-size: 0.62rem; color: #aaa; min-width: 34px; padding: 5px 4px;
+      border-radius: 10px; background: #F5F5F5; border: 2px solid #E0E0E0; font-weight: bold;
     }
     .f-chip .f-ico { font-size: 1.05rem; }
     .f-chip.done { background: #B2EBF2; border-color: #00ACC1; color: #006064; }
+    .f-chip.multi { background: #FFEBEE; border-color: #EF5350; color: #B71C1C; }
 
-    /* ══ 月ナビ ══ */
-    .month-nav {
-      display: flex; align-items: center; justify-content: center; gap: 14px;
-      padding: 12px 16px; margin: 10px 10px 0;
-      background: white; border-radius: 16px;
-      border: 3px solid #5B9BD5; box-shadow: 0 3px 0 #2D6A9F;
-    }
-    .month-nav button {
-      background: #5B9BD5; border: none; border-radius: 50px;
-      padding: 9px 20px; font-size: 1.1rem; cursor: pointer; color: white;
-      font-family: inherit; font-weight: bold;
-      box-shadow: 0 4px 0 #2D6A9F;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .month-nav button:active { transform: translateY(4px); box-shadow: none; }
-    .month-nav-label { font-size: 1.1rem; font-weight: bold; color: #333; min-width: 115px; text-align: center; }
-
-    /* ══ カレンダー ══ */
     .calendar { padding: 10px 10px 14px; }
-    .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 5px; }
+    .cal-header, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-header { margin-bottom: 5px; }
     .cal-header-cell { text-align: center; font-size: 0.68rem; padding: 3px 0; font-weight: bold; color: #999; }
-
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
     .cal-cell {
-      background: white; border-radius: 10px; min-height: 62px;
-      padding: 5px 2px 4px; text-align: center;
+      background: white; border-radius: 10px; min-height: 62px; padding: 5px 2px 4px; text-align: center;
       cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
       border: 2px solid #D6EAF8; transition: transform 0.1s;
     }
     .cal-cell:active { transform: scale(0.86); }
-    .cal-cell.empty  { background: transparent; border-color: transparent; pointer-events: none; }
-    .cal-cell.today  { background: #D6EAF8; border: 2.5px solid #5B9BD5; box-shadow: 0 2px 0 #2D6A9F; }
+    .cal-cell.empty { background: transparent; border-color: transparent; pointer-events: none; }
+    .cal-cell.today { background: #D6EAF8; border: 2.5px solid #5B9BD5; box-shadow: 0 2px 0 #2D6A9F; }
     .cal-cell.has-data { background: #EBF5FB; border-color: #85C1E9; }
-    .cal-cell.today.has-data { background: #D6EAF8; border-color: #5B9BD5; }
-
     .cal-date { font-size: 0.8rem; font-weight: bold; color: #555; line-height: 1.5; }
     .cal-dots { display: flex; justify-content: center; gap: 2px; margin-top: 3px; flex-wrap: wrap; }
-    .cal-dot  { width: 7px; height: 7px; border-radius: 50%; }
+    .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
     .dot-filaria { background: #00ACC1; }
-    .dot-weight  { background: #5B9BD5; }
-    .dot-health  { background: #26A69A; }
-    .dot-alert   { background: #E53935; }
-    .cal-camera  { font-size: 0.72rem; line-height: 1; margin-top: 3px; }
+    .dot-weight { background: #5B9BD5; }
+    .dot-health { background: #26A69A; }
+    .dot-alert { background: #E53935; }
+    .cal-camera { font-size: 0.72rem; line-height: 1; margin-top: 3px; }
 
-    /* ══ 凡例 ══ */
-    .legend {
-      display: flex; gap: 8px; justify-content: center;
-      padding: 6px 16px 14px; flex-wrap: wrap;
-    }
+    .legend { display: flex; gap: 8px; justify-content: center; padding: 6px 16px 14px; flex-wrap: wrap; }
     .legend-item {
-      display: flex; align-items: center; gap: 4px;
-      font-size: 0.65rem; color: #777;
-      background: white; border-radius: 20px;
-      padding: 3px 9px; border: 1.5px solid #D6EAF8;
+      display: flex; align-items: center; gap: 4px; font-size: 0.65rem; color: #777;
+      background: white; border-radius: 20px; padding: 3px 9px; border: 1.5px solid #D6EAF8;
     }
 
-    /* ══ モーダル ══ */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(20, 60, 100, 0.4);
-      display: flex; align-items: flex-end; justify-content: center;
-      z-index: 100;
+    .month-summary { padding: 0 10px 28px; }
+    .summary-card, .insight-card, .report-card {
+      background: white; border-radius: 16px; border: 3px solid #5B9BD5;
+      box-shadow: 0 3px 0 #2D6A9F; padding: 14px 14px 12px; margin-bottom: 12px;
     }
-    .modal-overlay.hidden { display: none; }
-    .modal {
-      background: #F0F8FF;
-      border-radius: 24px 24px 0 0;
-      border-top: 4px solid #5B9BD5;
-      padding: 16px 14px 36px;
-      width: 100%; max-width: 480px;
-      animation: slideUp 0.22s ease-out;
-      max-height: 92vh; overflow-y: auto;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0); }
-    }
-    .modal-drag { width: 44px; height: 5px; background: #5B9BD5; border-radius: 3px; margin: 0 auto 14px; }
-    .modal-title { font-size: 1.05rem; font-weight: bold; color: #2D6A9F; margin-bottom: 2px; text-align: center; }
-    .modal-sub   { font-size: 0.7rem; color: #AAA; margin-bottom: 12px; text-align: center; }
-
-    /* セクションカード */
-    .sec-card { border-radius: 16px; padding: 12px 12px 10px; margin-bottom: 10px; }
-    .sec-filaria { background: #E0F7FA; border: 3px solid #00ACC1; }
-    .sec-weight  { background: #DDEEFF; border: 3px solid #5B9BD5; }
-    .sec-food    { background: #EDE7F6; border: 3px solid #7E57C2; }
-    .sec-water   { background: #E1F5FE; border: 3px solid #0288D1; }
-    .sec-urine   { background: #E8EAF6; border: 3px solid #3F51B5; }
-    .sec-walk    { background: #E0F2F1; border: 3px solid #00897B; }
-    .sec-photo   { background: #FFF3E0; border: 3px solid #FF9800; }
-    .sec-memo    { background: #FFF9C4; border: 3px solid #F9A825; }
-
-    .sec-label {
-      font-size: 0.84rem; font-weight: bold; margin-bottom: 10px;
+    .insight-card { border-color: #EF5350; box-shadow: 0 3px 0 #B71C1C; }
+    .insight-card.is-calm { border-color: #26A69A; box-shadow: 0 3px 0 #00796B; }
+    .report-card { border-color: #00897B; box-shadow: 0 3px 0 #004D40; }
+    .summary-card-title, .insight-title, .report-title, .daylist-title, .stats-title {
+      font-size: 0.88rem; font-weight: bold; color: #2D6A9F; margin-bottom: 10px;
       display: flex; align-items: center; gap: 5px;
     }
-    .sec-filaria .sec-label { color: #006064; }
-    .sec-weight  .sec-label { color: #1565C0; }
-    .sec-food    .sec-label { color: #4527A0; }
-    .sec-water   .sec-label { color: #01579B; }
-    .sec-urine   .sec-label { color: #1A237E; }
-    .sec-walk    .sec-label { color: #004D40; }
-    .sec-photo   .sec-label { color: #E65100; }
-    .sec-memo    .sec-label { color: #F57F17; }
-
-    /* フィラリアトグル */
-    .filaria-toggle {
-      display: flex; align-items: center; gap: 10px; cursor: pointer;
-      background: white; border-radius: 12px; padding: 10px 12px;
-      border: 2px solid #80DEEA;
+    .insight-title { color: #B71C1C; }
+    .insight-card.is-calm .insight-title { color: #00796B; }
+    .report-title { color: #004D40; }
+    .insight-list { display: flex; flex-direction: column; gap: 8px; }
+    .insight-item {
+      border-radius: 12px; padding: 9px 10px; line-height: 1.45;
+      font-size: 0.78rem; background: #FFF8F8; border: 2px solid #FFCDD2;
     }
-    .filaria-toggle input[type=checkbox] { width: 22px; height: 22px; accent-color: #00ACC1; cursor: pointer; flex-shrink: 0; }
-    .filaria-toggle-label { font-size: 0.88rem; color: #006064; font-weight: bold; }
-
-    /* 体重ステッパー */
-    .weight-enable-row {
-      display: flex; align-items: center; gap: 10px; cursor: pointer;
-      background: white; border-radius: 12px; padding: 10px 12px;
-      border: 2px solid #90CAF9;
+    .insight-card.is-calm .insight-item { background: #F1FBF8; border-color: #B2DFDB; color: #00695C; }
+    .insight-item strong { color: #B71C1C; }
+    .insight-meta { display: block; margin-top: 2px; color: #777; font-size: 0.68rem; }
+    .report-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .report-actions button {
+      flex: 1; border: none; border-radius: 14px; background: #00897B; color: white;
+      padding: 12px 10px; font-weight: bold; box-shadow: 0 3px 0 #004D40; cursor: pointer;
     }
-    .weight-enable-row input[type=checkbox] { width: 22px; height: 22px; accent-color: #5B9BD5; cursor: pointer; flex-shrink: 0; }
-    .weight-enable-label { font-size: 0.88rem; color: #1565C0; font-weight: bold; }
-    .weight-stepper {
-      display: flex; align-items: center; justify-content: center;
-      gap: 14px; margin-top: 12px;
-    }
-    .weight-stepper.hidden { display: none; }
-    .wt-btn {
-      width: 46px; height: 46px; border-radius: 50%;
-      border: 2.5px solid #5B9BD5; background: white; color: #2D6A9F;
-      font-size: 1.5rem; font-weight: bold; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 3px 0 #2D6A9F;
-      transition: transform 0.1s, box-shadow 0.1s; line-height: 1;
-    }
-    .wt-btn:active { transform: translateY(3px); box-shadow: none; }
-    .wt-display {
-      background: white; border: 2.5px solid #5B9BD5;
-      border-radius: 14px; padding: 8px 18px;
-      min-width: 110px; text-align: center;
-      box-shadow: 0 3px 0 #2D6A9F;
-    }
-    .wt-val  { font-size: 1.5rem; font-weight: bold; color: #2D6A9F; }
-    .wt-unit { font-size: 0.82rem; color: #888; margin-left: 2px; }
-
-    /* 選択ボタン共通 */
-    .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
-    .btn-choice {
-      flex: 1 1 auto; min-width: calc(33% - 4px);
-      padding: 9px 4px; border-radius: 12px;
-      font-size: 0.73rem; font-family: inherit;
-      cursor: pointer; text-align: center; line-height: 1.4;
-      border: 2px solid #DDD; background: white; color: #666;
-      box-shadow: 0 2px 0 #CCC;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .btn-choice:active { transform: translateY(2px); box-shadow: none; }
-
-    .sec-food  .btn-choice.selected { background: #7E57C2; border-color: #4527A0; color: white; font-weight: bold; box-shadow: 0 3px 0 #311B92; }
-    .sec-water .btn-choice.selected { background: #0288D1; border-color: #01579B; color: white; font-weight: bold; box-shadow: 0 3px 0 #01579B; }
-    .sec-urine .btn-choice.selected { background: #3F51B5; border-color: #1A237E; color: white; font-weight: bold; box-shadow: 0 3px 0 #0D47A1; }
-    .sec-walk  .btn-choice.selected { background: #00897B; border-color: #004D40; color: white; font-weight: bold; box-shadow: 0 3px 0 #00251A; }
-    .btn-choice.alert-choice.selected {
-      background: #E53935 !important; border-color: #B71C1C !important;
-      color: white !important; box-shadow: 0 3px 0 #7F0000 !important;
-    }
-
-    /* 写真 */
-    .photo-preview {
-      border-radius: 12px; overflow: hidden;
-      border: 2.5px solid #FF9800; margin-bottom: 10px;
-      position: relative;
-    }
-    .photo-preview.hidden { display: none; }
-    .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
-    .photo-remove-btn {
-      position: absolute; top: 8px; right: 8px;
-      background: rgba(0,0,0,0.65); color: white;
-      border: none; border-radius: 20px;
-      padding: 5px 12px; font-size: 0.76rem;
-      cursor: pointer; font-family: inherit; font-weight: bold;
-    }
-    .photo-add-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: white; border: 2.5px dashed #FF9800;
-      border-radius: 12px; padding: 16px 12px;
-      cursor: pointer; color: #E65100;
-      font-weight: bold; font-size: 0.9rem; width: 100%;
-    }
-    .photo-add-btn:active { opacity: 0.7; }
-    .photo-upload-progress { font-size: 0.78rem; color: #FF9800; text-align: center; margin-top: 6px; min-height: 18px; font-weight: bold; }
-
-    /* テキストエリア */
-    .modal textarea {
-      width: 100%; padding: 10px 12px;
-      border: 2.5px solid #F9A825; border-radius: 12px;
-      font-size: 0.88rem; font-family: inherit;
-      resize: none; height: 68px; background: white;
-    }
-    .modal textarea:focus { outline: none; border-color: #F57F17; }
-
-    /* アクションボタン */
-    .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
-    .modal-btn {
-      flex: 1; padding: 14px; border: none; border-radius: 16px;
-      font-size: 0.94rem; font-weight: bold; font-family: inherit; cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .modal-btn:active { transform: translateY(3px); box-shadow: none !important; }
-    .modal-btn.primary { background: #5B9BD5; color: white; box-shadow: 0 5px 0 #2D6A9F; font-size: 1rem; letter-spacing: 0.05em; }
-    .modal-btn.danger  { background: #FFCDD2; color: #C62828; border: 2px solid #EF9A9A; box-shadow: 0 3px 0 #EF9A9A; }
-    .modal-btn.cancel  { background: #EEE; color: #888; box-shadow: 0 3px 0 #CCC; }
-
-    /* 接続状態 */
-    .conn-pill {
-      position: fixed; bottom: 14px; right: 14px;
-      padding: 7px 14px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 50;
-    }
-    .conn-ok      { background: #B2EBF2; color: #006064; border: 2px solid #00ACC1; }
-    .conn-error   { background: #FFCDD2; color: #B71C1C; border: 2px solid #EF5350; }
-    .conn-loading { background: #DDEEFF; color: #1565C0; border: 2px solid #5B9BD5; }
-    .spinner {
-      display: inline-block; width: 11px; height: 11px;
-      border: 2px solid #90CAF9; border-top-color: #5B9BD5;
-      border-radius: 50%; animation: spin 0.7s linear infinite;
-      vertical-align: middle; margin-right: 3px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ══ 月次サマリー＆日別一覧 ══ */
-    .month-summary { padding: 0 10px 28px; }
-
-    .summary-card {
-      background: white; border-radius: 16px;
-      border: 3px solid #5B9BD5; box-shadow: 0 3px 0 #2D6A9F;
-      padding: 14px 14px 12px; margin-bottom: 12px;
-    }
-    .summary-card-title {
-      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
-      margin-bottom: 12px; display: flex; align-items: center; gap: 5px;
-    }
+    .report-actions button.secondary { background: white; color: #00695C; border: 2px solid #80CBC4; box-shadow: 0 3px 0 #80CBC4; }
     .summary-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .s-item {
-      background: #EBF4FF; border-radius: 12px;
-      padding: 8px 12px; text-align: center;
-      min-width: 64px; border: 2px solid #AACDE8;
-    }
+    .s-item { background: #EBF4FF; border-radius: 12px; padding: 8px 12px; text-align: center; min-width: 64px; border: 2px solid #AACDE8; }
     .s-item.s-alert { background: #FFEBEE; border-color: #EF9A9A; }
     .s-val { font-size: 1.1rem; font-weight: bold; color: #1565C0; line-height: 1.3; }
     .s-item.s-alert .s-val { color: #C62828; }
-    .s-lbl { font-size: 0.62rem; color: #999; margin-top: 2px; }
+    .s-lbl { font-size: 0.62rem; color: #777; margin-top: 2px; }
 
-    .daylist-title {
-      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
-      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    .stat-card, .day-item, .no-records {
+      background: white; border-radius: 14px; border: 2px solid #D6EAF8;
     }
-    .day-item {
-      background: white; border-radius: 14px;
-      border: 2px solid #D6EAF8; padding: 10px 12px;
-      margin-bottom: 7px; cursor: pointer;
-      transition: opacity 0.1s;
-    }
-    .day-item:active { opacity: 0.65; }
-    .day-item.day-alert { border-color: #FFCDD2; background: #FFF8F8; }
-    .day-item-hd {
-      display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
-    }
-    .day-item-date { font-size: 0.85rem; font-weight: bold; color: #2D6A9F; flex: 1; }
-    .day-edit-hint { font-size: 0.7rem; color: #BBBBBB; }
-    .day-badges { display: flex; flex-wrap: wrap; gap: 4px; }
-    .dbadge {
-      font-size: 0.68rem; padding: 3px 8px; border-radius: 20px; font-weight: bold;
-    }
-    .db-filaria { background: #B2EBF2; color: #006064; }
-    .db-weight  { background: #BBDEFB; color: #1565C0; }
-    .db-food    { background: #EDE7F6; color: #4527A0; }
-    .db-water   { background: #B3E5FC; color: #01579B; }
-    .db-urine   { background: #C5CAE9; color: #1A237E; }
-    .db-walk    { background: #DCEDC8; color: #33691E; }
-    .db-photo   { background: #FFE0B2; color: #E65100; }
-    .db-memo    { background: #FFF9C4; color: #F57F17; }
-    .db-alert   { background: #FFCDD2 !important; color: #B71C1C !important; }
-
-    .no-records {
-      text-align: center; color: #BBB; font-size: 0.82rem;
-      padding: 24px 0; background: white; border-radius: 14px;
-      border: 2px dashed #D6EAF8;
-    }
-
-    /* ══ 項目別統計 ══ */
-    .stats-title {
-      font-size: 0.88rem; font-weight: bold; color: #2D6A9F;
-      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
-    }
-    .stat-card {
-      background: white; border-radius: 14px;
-      border: 2px solid #D6EAF8; padding: 12px 12px 8px;
-      margin-bottom: 8px;
-    }
+    .stat-card { padding: 12px 12px 8px; margin-bottom: 8px; }
     .stat-card.stat-has-alert { border-color: #FFCDD2; }
-    .stat-card-title {
-      font-size: 0.8rem; font-weight: bold; color: #444;
-      margin-bottom: 10px;
-    }
-    .stat-row {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
-    }
-    .stat-label {
-      font-size: 0.66rem; color: #666;
-      min-width: 90px; max-width: 90px; flex-shrink: 0;
-      line-height: 1.3;
-    }
-    .stat-bar-wrap {
-      flex: 1; background: #EEF5FB; border-radius: 6px;
-      height: 14px; overflow: hidden;
-    }
-    .stat-bar {
-      height: 100%; background: #5B9BD5;
-      border-radius: 6px; transition: width 0.4s ease;
-      min-width: 4px;
-    }
+    .stat-card-title { font-size: 0.8rem; font-weight: bold; color: #444; margin-bottom: 10px; }
+    .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .stat-label { font-size: 0.66rem; color: #666; min-width: 90px; max-width: 90px; flex-shrink: 0; line-height: 1.3; }
+    .stat-bar-wrap { flex: 1; background: #EEF5FB; border-radius: 6px; height: 14px; overflow: hidden; }
+    .stat-bar { height: 100%; background: #5B9BD5; border-radius: 6px; transition: width 0.4s ease; min-width: 4px; }
     .stat-bar.bar-alert { background: #EF5350; }
-    .stat-bar.bar-best  { background: #26A69A; }
-    .stat-count {
-      font-size: 0.68rem; color: #888;
-      min-width: 22px; text-align: right; flex-shrink: 0;
-    }
+    .stat-bar.bar-best { background: #26A69A; }
+    .stat-count { font-size: 0.68rem; color: #888; min-width: 22px; text-align: right; flex-shrink: 0; }
     .stat-count strong { color: #1565C0; }
     .stat-count.cnt-alert strong { color: #C62828; }
-
-    /* 体重推移 */
     .weight-trend { display: flex; flex-direction: column; gap: 6px; }
-    .wt-row {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.76rem; color: #555;
-    }
+    .wt-row { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; color: #555; }
     .wt-row-date { min-width: 52px; color: #999; }
-    .wt-row-val  { font-weight: bold; color: #1565C0; min-width: 44px; }
-    .wt-row-arrow { font-size: 0.68rem; font-weight: bold; }
-    .wt-up   { color: #1565C0; }
+    .wt-row-val { font-weight: bold; color: #1565C0; min-width: 44px; }
+    .wt-row-arrow { font-size: 0.68rem; font-weight: bold; min-width: 58px; }
+    .wt-up { color: #1565C0; }
     .wt-down { color: #C62828; }
     .wt-same { color: #AAA; }
-    .wt-bar-wrap {
-      flex: 1; height: 10px; background: #EEF5FB;
-      border-radius: 5px; overflow: hidden;
-    }
+    .wt-bar-wrap { flex: 1; height: 10px; background: #EEF5FB; border-radius: 5px; overflow: hidden; }
     .wt-bar { height: 100%; background: #90CAF9; border-radius: 5px; }
+
+    .daylist-title, .stats-title { margin-top: 12px; }
+    .day-item { padding: 10px 12px; margin-bottom: 7px; cursor: pointer; transition: opacity 0.1s; }
+    .day-item:active { opacity: 0.65; }
+    .day-item.day-alert { border-color: #FFCDD2; background: #FFF8F8; }
+    .day-item-hd { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .day-item-date { font-size: 0.85rem; font-weight: bold; color: #2D6A9F; flex: 1; }
+    .day-edit-hint { font-size: 0.7rem; color: #999; }
+    .day-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+    .dbadge { font-size: 0.68rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
+    .db-filaria { background: #B2EBF2; color: #006064; }
+    .db-weight { background: #BBDEFB; color: #1565C0; }
+    .db-food { background: #EDE7F6; color: #4527A0; }
+    .db-water { background: #B3E5FC; color: #01579B; }
+    .db-urine { background: #C5CAE9; color: #1A237E; }
+    .db-walk { background: #DCEDC8; color: #33691E; }
+    .db-photo { background: #FFE0B2; color: #E65100; }
+    .db-memo { background: #FFF9C4; color: #F57F17; }
+    .db-alert { background: #FFCDD2 !important; color: #B71C1C !important; }
+    .no-records { text-align: center; color: #999; font-size: 0.82rem; padding: 24px 0; border-style: dashed; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(20, 60, 100, 0.4);
+      display: flex; align-items: flex-end; justify-content: center; z-index: 100;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: #F0F8FF; border-radius: 24px 24px 0 0; border-top: 4px solid #5B9BD5;
+      padding: 16px 14px 36px; width: 100%; max-width: 520px; animation: slideUp 0.22s ease-out;
+      max-height: 92vh; overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-drag { width: 44px; height: 5px; background: #5B9BD5; border-radius: 3px; margin: 0 auto 14px; }
+    .modal-title { font-size: 1.05rem; font-weight: bold; color: #2D6A9F; margin-bottom: 2px; text-align: center; }
+    .modal-sub { font-size: 0.7rem; color: #777; margin-bottom: 12px; text-align: center; }
+    .sec-card { border-radius: 16px; padding: 12px 12px 10px; margin-bottom: 10px; }
+    .sec-filaria { background: #E0F7FA; border: 3px solid #00ACC1; }
+    .sec-weight { background: #DDEEFF; border: 3px solid #5B9BD5; }
+    .sec-food { background: #EDE7F6; border: 3px solid #7E57C2; }
+    .sec-water { background: #E1F5FE; border: 3px solid #0288D1; }
+    .sec-urine { background: #E8EAF6; border: 3px solid #3F51B5; }
+    .sec-walk { background: #E0F2F1; border: 3px solid #00897B; }
+    .sec-photo { background: #FFF3E0; border: 3px solid #FF9800; }
+    .sec-memo { background: #FFF9C4; border: 3px solid #F9A825; }
+    .sec-label { font-size: 0.84rem; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .filaria-toggle, .weight-enable-row {
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+      background: white; border-radius: 12px; padding: 10px 12px; border: 2px solid #90CAF9;
+    }
+    .filaria-toggle input, .weight-enable-row input { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; }
+    .quick-normal {
+      width: 100%; border: 2px solid #80CBC4; background: white; color: #00695C;
+      border-radius: 14px; padding: 11px 12px; font-weight: bold; margin-bottom: 10px;
+      box-shadow: 0 3px 0 #80CBC4; cursor: pointer;
+    }
+    .weight-stepper { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
+    .weight-stepper.hidden { display: none; }
+    .wt-btn {
+      width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid #5B9BD5;
+      background: white; color: #2D6A9F; font-size: 1.5rem; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 #2D6A9F;
+    }
+    .wt-display { background: white; border: 2.5px solid #5B9BD5; border-radius: 14px; padding: 8px 18px; min-width: 110px; text-align: center; box-shadow: 0 3px 0 #2D6A9F; }
+    .wt-val { font-size: 1.5rem; font-weight: bold; color: #2D6A9F; }
+    .wt-unit { font-size: 0.82rem; color: #888; margin-left: 2px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
+    .btn-choice {
+      flex: 1 1 auto; min-width: calc(33% - 4px); padding: 9px 4px; border-radius: 12px;
+      font-size: 0.73rem; cursor: pointer; text-align: center; line-height: 1.4;
+      border: 2px solid #DDD; background: white; color: #666; box-shadow: 0 2px 0 #CCC;
+    }
+    .sec-food .btn-choice.selected { background: #7E57C2; border-color: #4527A0; color: white; font-weight: bold; box-shadow: 0 3px 0 #311B92; }
+    .sec-water .btn-choice.selected { background: #0288D1; border-color: #01579B; color: white; font-weight: bold; box-shadow: 0 3px 0 #01579B; }
+    .sec-urine .btn-choice.selected { background: #3F51B5; border-color: #1A237E; color: white; font-weight: bold; box-shadow: 0 3px 0 #0D47A1; }
+    .sec-walk .btn-choice.selected { background: #00897B; border-color: #004D40; color: white; font-weight: bold; box-shadow: 0 3px 0 #00251A; }
+    .btn-choice.alert-choice.selected { background: #E53935 !important; border-color: #B71C1C !important; color: white !important; box-shadow: 0 3px 0 #7F0000 !important; }
+    .photo-preview { border-radius: 12px; overflow: hidden; border: 2.5px solid #FF9800; margin-bottom: 10px; position: relative; }
+    .photo-preview.hidden { display: none; }
+    .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+    .photo-remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 20px; padding: 5px 12px; font-size: 0.76rem; cursor: pointer; font-weight: bold; }
+    .photo-add-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: white; border: 2.5px dashed #FF9800; border-radius: 12px; padding: 16px 12px; cursor: pointer; color: #E65100; font-weight: bold; font-size: 0.9rem; width: 100%; }
+    .photo-upload-progress { font-size: 0.78rem; color: #FF9800; text-align: center; margin-top: 6px; min-height: 18px; font-weight: bold; }
+    .modal textarea { width: 100%; padding: 10px 12px; border: 2.5px solid #F9A825; border-radius: 12px; font-size: 0.88rem; resize: none; height: 68px; background: white; }
+    .modal textarea:focus { outline: none; border-color: #F57F17; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .modal-btn { flex: 1; padding: 14px 10px; border: none; border-radius: 16px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+    .modal-btn.primary { background: #5B9BD5; color: white; box-shadow: 0 5px 0 #2D6A9F; }
+    .modal-btn.danger { background: #FFCDD2; color: #C62828; border: 2px solid #EF9A9A; box-shadow: 0 3px 0 #EF9A9A; }
+    .modal-btn.cancel { background: #EEE; color: #666; box-shadow: 0 3px 0 #CCC; }
+    .conn-pill { position: fixed; bottom: 14px; right: 14px; padding: 7px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 50; }
+    .conn-ok { background: #B2EBF2; color: #006064; border: 2px solid #00ACC1; }
+    .conn-error { background: #FFCDD2; color: #B71C1C; border: 2px solid #EF5350; }
+    .conn-loading { background: #DDEEFF; color: #1565C0; border: 2px solid #5B9BD5; }
+    .spinner { display: inline-block; width: 11px; height: 11px; border: 2px solid #90CAF9; border-top-color: #5B9BD5; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 3px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .report-overlay {
+      position: fixed; inset: 0; background: #F6FBFF; z-index: 200; overflow-y: auto;
+      padding: 16px 12px 28px;
+    }
+    .report-overlay.hidden { display: none; }
+    .vet-report {
+      background: white; max-width: 760px; margin: 0 auto; border-radius: 12px;
+      border: 2px solid #B8D7EC; padding: 18px; color: #1F2D3A;
+    }
+    .report-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .report-top h2 { font-size: 1.25rem; color: #1B5E20; margin-bottom: 4px; }
+    .report-period { font-size: 0.82rem; color: #555; line-height: 1.5; }
+    .report-close {
+      border: none; background: #E0E0E0; color: #333; border-radius: 10px;
+      padding: 10px 12px; font-weight: bold; cursor: pointer;
+    }
+    .report-print {
+      border: none; background: #00897B; color: white; border-radius: 10px;
+      padding: 10px 12px; font-weight: bold; cursor: pointer; margin-right: 6px;
+    }
+    .report-section { margin-top: 16px; break-inside: avoid; }
+    .report-section h3 { font-size: 0.98rem; color: #244F7A; border-bottom: 2px solid #D6EAF8; padding-bottom: 5px; margin-bottom: 8px; }
+    .report-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .report-kpi { border: 1px solid #D6EAF8; border-radius: 8px; padding: 8px; background: #F8FCFF; }
+    .report-kpi strong { display: block; font-size: 1rem; color: #1565C0; }
+    .report-kpi span { font-size: 0.72rem; color: #666; }
+    .report-alert-list, .report-day-list { display: flex; flex-direction: column; gap: 6px; }
+    .report-alert { border-left: 4px solid #E53935; background: #FFF8F8; padding: 8px; border-radius: 6px; font-size: 0.82rem; line-height: 1.45; }
+    .report-day { border: 1px solid #E0ECF5; border-radius: 8px; padding: 8px; font-size: 0.8rem; line-height: 1.5; }
+    .report-day strong { color: #244F7A; }
+    .report-note { color: #777; font-size: 0.76rem; line-height: 1.55; margin-top: 10px; }
+    .report-photo-link { color: #E65100; font-weight: bold; }
+
+    @media (min-width: 720px) {
+      main { max-width: 720px; margin: 0 auto; }
+      .report-kpis { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media print {
+      body { background: white; color: #111; }
+      header, .year-nav, .filaria-bar, .month-nav, .calendar, .legend, .month-summary, .conn-pill, .report-print, .report-close { display: none !important; }
+      .report-overlay { display: block !important; position: static; padding: 0; background: white; }
+      .vet-report { max-width: none; border: none; border-radius: 0; padding: 0; }
+      .report-section h3 { color: #111; border-color: #999; }
+      .report-alert { border-color: #111; background: white; }
+    }
   </style>
 </head>
 <body>
-
 <header>
   <h1>🐾 にこちゃんの健康管理アプリ</h1>
   <p>🌸 毎日の健康・フィラリア投薬を記録します 🌸</p>
 </header>
 
-<div class="year-nav">
-  <button id="prevYear">◀</button>
-  <div class="year-nav-label" id="yearLabel"></div>
-  <button id="nextYear">▶</button>
-</div>
-
-<div class="filaria-bar">
-  <div class="filaria-bar-title">💊 フィラリア投薬チェック（5月〜12月）</div>
-  <div class="filaria-chips" id="filariaChips"></div>
-</div>
-
-<div class="month-nav">
-  <button id="prevMonth">◀</button>
-  <div class="month-nav-label" id="monthLabel"></div>
-  <button id="nextMonth">▶</button>
-</div>
-
-<div class="calendar">
-  <div class="cal-header">
-    <div class="cal-header-cell" style="color:#E53935">日</div>
-    <div class="cal-header-cell">月</div>
-    <div class="cal-header-cell">火</div>
-    <div class="cal-header-cell">水</div>
-    <div class="cal-header-cell">木</div>
-    <div class="cal-header-cell">金</div>
-    <div class="cal-header-cell" style="color:#1E88E5">土</div>
+<main>
+  <div class="year-nav">
+    <button id="prevYear">◀</button>
+    <div class="year-nav-label" id="yearLabel"></div>
+    <button id="nextYear">▶</button>
   </div>
-  <div class="cal-grid" id="calGrid"></div>
-</div>
 
-<div class="legend">
-  <div class="legend-item"><span class="cal-dot dot-filaria" style="display:inline-block"></span>フィラリア</div>
-  <div class="legend-item"><span class="cal-dot dot-weight"  style="display:inline-block"></span>体重</div>
-  <div class="legend-item"><span class="cal-dot dot-health"  style="display:inline-block"></span>健康記録</div>
-  <div class="legend-item"><span class="cal-dot dot-alert"   style="display:inline-block"></span>要注意</div>
-  <div class="legend-item">📷 写真あり</div>
-</div>
+  <div class="filaria-bar">
+    <div class="filaria-bar-title">💊 フィラリア投薬チェック（5月〜12月）</div>
+    <div class="filaria-chips" id="filariaChips"></div>
+  </div>
 
-<!-- 月次サマリー＆日別一覧 -->
-<div class="month-summary" id="monthSummary"></div>
+  <div class="month-nav">
+    <button id="prevMonth">◀</button>
+    <div class="month-nav-label" id="monthLabel"></div>
+    <button id="nextMonth">▶</button>
+  </div>
 
-<!-- モーダル -->
+  <div class="calendar">
+    <div class="cal-header">
+      <div class="cal-header-cell" style="color:#E53935">日</div>
+      <div class="cal-header-cell">月</div>
+      <div class="cal-header-cell">火</div>
+      <div class="cal-header-cell">水</div>
+      <div class="cal-header-cell">木</div>
+      <div class="cal-header-cell">金</div>
+      <div class="cal-header-cell" style="color:#1E88E5">土</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="cal-dot dot-filaria"></span>フィラリア</div>
+    <div class="legend-item"><span class="cal-dot dot-weight"></span>体重</div>
+    <div class="legend-item"><span class="cal-dot dot-health"></span>健康記録</div>
+    <div class="legend-item"><span class="cal-dot dot-alert"></span>要注意</div>
+    <div class="legend-item">📷 写真あり</div>
+  </div>
+
+  <div class="month-summary" id="monthSummary"></div>
+</main>
+
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal" id="modalBody">
     <div class="modal-drag"></div>
     <div class="modal-title" id="modalTitle"></div>
     <div class="modal-sub">✏️ 記録する項目を入力してください（すべて任意）</div>
 
+    <button class="quick-normal" id="quickNormalBtn">今日もいつも通り（健康項目を普通にする）</button>
+
     <div class="sec-card sec-filaria">
       <div class="sec-label">💊 フィラリア投薬</div>
       <label class="filaria-toggle">
         <input type="checkbox" id="filariaCheck">
-        <span class="filaria-toggle-label">今日フィラリアを投薬した 🐶</span>
+        <span>今日フィラリアを投薬した</span>
       </label>
     </div>
 
@@ -482,13 +367,11 @@
       <div class="sec-label">⚖️ 体重</div>
       <label class="weight-enable-row">
         <input type="checkbox" id="weightEnable">
-        <span class="weight-enable-label">体重を記録する</span>
+        <span>体重を記録する</span>
       </label>
       <div class="weight-stepper hidden" id="weightStepper">
         <button class="wt-btn" id="weightMinus">－</button>
-        <div class="wt-display">
-          <span class="wt-val" id="weightValue">7.5</span><span class="wt-unit">kg</span>
-        </div>
+        <div class="wt-display"><span class="wt-val" id="weightValue">7.5</span><span class="wt-unit">kg</span></div>
         <button class="wt-btn" id="weightPlus">＋</button>
       </div>
     </div>
@@ -563,9 +446,11 @@
   </div>
 </div>
 
-<div class="conn-pill conn-loading" id="connPill">
-  <span class="spinner"></span>接続中...
+<div class="report-overlay hidden" id="reportOverlay">
+  <div class="vet-report" id="vetReport"></div>
 </div>
+
+<div class="conn-pill conn-loading" id="connPill"><span class="spinner"></span>接続中...</div>
 
 <script>
 const FIREBASE_CONFIG = {
@@ -577,30 +462,28 @@ const FIREBASE_CONFIG = {
   appId: "1:416564829020:web:922f2f88b6cc78c3297f99"
 };
 
-const MONTH_JP       = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const DOW_JP         = ['日','月','火','水','木','金','土'];
+const MONTH_JP = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const DOW_JP = ['日','月','火','水','木','金','土'];
 const FILARIA_MONTHS = [5,6,7,8,9,10,11,12];
 const DEFAULT_WEIGHT = 7.5;
+const MEMO_ALERT_KEYWORDS = ['嘔吐','吐いた','下痢','血','咳','震え','ぐったり','元気ない','元気がない','痛そう','食欲なし','けいれん','発作'];
 
 const todayObj = new Date();
 const todayKey = fmt(todayObj.getFullYear(), todayObj.getMonth()+1, todayObj.getDate());
-
-let currentYear  = todayObj.getFullYear();
+let currentYear = todayObj.getFullYear();
 let currentMonth = todayObj.getMonth() + 1;
 let currentModalDate = null;
 let dayCache = {};
 let unsubListener = null;
 let weightVal = DEFAULT_WEIGHT;
-
-let currentPhotoUrl  = null;
+let currentPhotoUrl = null;
 let currentPhotoFile = null;
-let photoRemoved     = false;
+let photoRemoved = false;
 
 firebase.initializeApp(FIREBASE_CONFIG);
-const db      = firebase.firestore();
+const db = firebase.firestore();
 const storage = firebase.storage();
 
-// ---- 選択ボタン ----
 ['foodGroup','waterGroup','urineGroup','walkGroup'].forEach(gid => {
   document.getElementById(gid).querySelectorAll('.btn-choice').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -610,6 +493,14 @@ const storage = firebase.storage();
     });
   });
 });
+
+document.getElementById('quickNormalBtn').addEventListener('click', () => {
+  setChoice('foodGroup', '普通');
+  setChoice('waterGroup', '普通');
+  setChoice('urineGroup', '普通');
+  setChoice('walkGroup', '普通');
+});
+
 function getChoice(gid) {
   const s = document.getElementById(gid).querySelector('.btn-choice.selected');
   return s ? s.dataset.val : null;
@@ -620,22 +511,16 @@ function setChoice(gid, val) {
   });
 }
 
-// ---- 体重ステッパー ----
-const weightEnableEl  = document.getElementById('weightEnable');
+const weightEnableEl = document.getElementById('weightEnable');
 const weightStepperEl = document.getElementById('weightStepper');
-const weightValueEl   = document.getElementById('weightValue');
-
-weightEnableEl.addEventListener('change', () => {
-  weightStepperEl.classList.toggle('hidden', !weightEnableEl.checked);
-});
+const weightValueEl = document.getElementById('weightValue');
+weightEnableEl.addEventListener('change', () => weightStepperEl.classList.toggle('hidden', !weightEnableEl.checked));
 document.getElementById('weightMinus').addEventListener('click', () => {
-  weightVal = Math.round((weightVal - 0.1) * 10) / 10;
-  if (weightVal < 0) weightVal = 0;
+  weightVal = Math.max(0, Math.round((weightVal - 0.1) * 10) / 10);
   weightValueEl.textContent = weightVal.toFixed(1);
 });
 document.getElementById('weightPlus').addEventListener('click', () => {
-  weightVal = Math.round((weightVal + 0.1) * 10) / 10;
-  if (weightVal > 99.9) weightVal = 99.9;
+  weightVal = Math.min(99.9, Math.round((weightVal + 0.1) * 10) / 10);
   weightValueEl.textContent = weightVal.toFixed(1);
 });
 function setWeightState(saved) {
@@ -644,23 +529,31 @@ function setWeightState(saved) {
     weightEnableEl.checked = true;
     weightStepperEl.classList.remove('hidden');
   } else {
-    weightVal = DEFAULT_WEIGHT;
+    weightVal = getLatestWeightBefore(currentModalDate) || DEFAULT_WEIGHT;
     weightEnableEl.checked = false;
     weightStepperEl.classList.add('hidden');
   }
   weightValueEl.textContent = weightVal.toFixed(1);
 }
+function getLatestWeightBefore(key) {
+  const weights = Object.entries(dayCache)
+    .filter(([k,r]) => (!key || k < key) && r.weight)
+    .sort(([a],[b]) => b.localeCompare(a));
+  return weights.length ? parseFloat(weights[0][1].weight) : null;
+}
 
-// ---- 写真 ----
-const photoPreviewEl  = document.getElementById('photoPreview');
-const photoImgEl      = document.getElementById('photoImg');
-const photoAddBtnEl   = document.getElementById('photoAddBtn');
+const photoPreviewEl = document.getElementById('photoPreview');
+const photoImgEl = document.getElementById('photoImg');
+const photoAddBtnEl = document.getElementById('photoAddBtn');
 const photoProgressEl = document.getElementById('photoProgress');
-
 document.getElementById('photoInput').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { alert('10MB以下の画像を選択してください。'); e.target.value = ''; return; }
+  if (file.size > 10 * 1024 * 1024) {
+    alert('10MB以下の画像を選択してください。');
+    e.target.value = '';
+    return;
+  }
   currentPhotoFile = file;
   photoRemoved = false;
   const reader = new FileReader();
@@ -671,7 +564,6 @@ document.getElementById('photoInput').addEventListener('change', e => {
   };
   reader.readAsDataURL(file);
 });
-
 document.getElementById('photoRemoveBtn').addEventListener('click', () => {
   currentPhotoFile = null;
   photoRemoved = true;
@@ -680,7 +572,6 @@ document.getElementById('photoRemoveBtn').addEventListener('click', () => {
   document.getElementById('photoInput').value = '';
   photoImgEl.src = '';
 });
-
 function setPhotoState(url) {
   currentPhotoUrl = url || null;
   currentPhotoFile = null;
@@ -696,10 +587,9 @@ function setPhotoState(url) {
     document.getElementById('photoInput').value = '';
   }
 }
-
 async function handlePhotoSave() {
   if (photoRemoved && currentPhotoUrl) {
-    try { await storage.refFromURL(currentPhotoUrl).delete(); } catch(e) { /* 無視 */ }
+    try { await storage.refFromURL(currentPhotoUrl).delete(); } catch(e) {}
     return null;
   }
   if (currentPhotoFile) {
@@ -716,13 +606,18 @@ async function handlePhotoSave() {
 function fmt(y, m, d) {
   return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function dayLabel(key) {
+  const [,m,d] = key.split('-').map(Number);
+  return `${m}/${d}`;
+}
 
-// ---- Firestore ----
 function loadYearData() {
   if (unsubListener) { unsubListener(); unsubListener = null; }
   dayCache = {};
   setConn('loading', '<span class="spinner"></span>接続中...');
-
   unsubListener = db.collection('filaria')
     .orderBy(firebase.firestore.FieldPath.documentId())
     .startAt(`${currentYear}-01-01`)
@@ -738,7 +633,12 @@ function loadYearData() {
         renderMonthSummary();
         setConn('ok', '✅ 接続済み');
       },
-      err => { console.error(err); setConn('error', '❌ 接続エラー'); }
+      err => {
+        console.error(err);
+        setConn('error', '❌ 接続エラー');
+        renderCalendar();
+        renderMonthSummary();
+      }
     );
 }
 
@@ -748,39 +648,126 @@ function renderFilariaChips() {
   wrap.innerHTML = '';
   FILARIA_MONTHS.forEach(m => {
     const prefix = `${currentYear}-${String(m).padStart(2,'0')}-`;
-    const done = Object.keys(dayCache).some(k => k.startsWith(prefix) && dayCache[k].filaria);
+    const days = Object.keys(dayCache).filter(k => k.startsWith(prefix) && dayCache[k].filaria).map(k => parseInt(k.slice(-2)));
     const chip = document.createElement('div');
-    chip.className = 'f-chip' + (done ? ' done' : '');
-    chip.innerHTML = `<span class="f-ico">${done ? '✅' : '⬜'}</span><span>${m}月</span>`;
+    chip.className = 'f-chip' + (days.length ? ' done' : '') + (days.length > 1 ? ' multi' : '');
+    chip.innerHTML = `<span class="f-ico">${days.length ? '✅' : '⬜'}</span><span>${m}月</span>${days.length ? `<span>${days.join(',')}日</span>` : ''}`;
     wrap.appendChild(chip);
   });
 }
 
-// ---- 月次サマリー＆日別一覧 ----
+function getMonthRecords() {
+  const prefix = `${currentYear}-${String(currentMonth).padStart(2,'0')}-`;
+  return Object.entries(dayCache).filter(([k]) => k.startsWith(prefix)).sort(([a],[b]) => a.localeCompare(b));
+}
+
+function hasUrgentAlert(rec) {
+  return rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.walk === '行きたがらない';
+}
+function hasSoftAlert(rec) {
+  return rec.food === '少なめ' || rec.water === 'かなり多い' || rec.urine === '少ない' || rec.urine === 'かなり多い' || rec.walk === '乗り気じゃない';
+}
+function memoHits(memo) {
+  if (!memo) return [];
+  return MEMO_ALERT_KEYWORDS.filter(word => memo.includes(word));
+}
+
+function detectHealthAlerts(records) {
+  const alerts = [];
+  const add = (level, title, detail, dates) => alerts.push({ level, title, detail, dates });
+
+  records.forEach(([key, rec]) => {
+    if (rec.food === '食べなかった') add('high', `${dayLabel(key)} 食事を食べなかった記録があります`, '食欲の低下は診察時に伝えたい大事な情報です。', [key]);
+    if (rec.water === '飲まなかった') add('high', `${dayLabel(key)} 水を飲まなかった記録があります`, '飲水量の低下が続く場合は注意してください。', [key]);
+    if (rec.urine === '血尿あり') add('high', `${dayLabel(key)} 血尿の記録があります`, '血尿は病院で必ず伝えたい項目です。', [key]);
+    if (rec.walk === '行きたがらない') add('high', `${dayLabel(key)} 散歩に行きたがらない記録があります`, '痛みや体調不良のサインとして見返せます。', [key]);
+    const hits = memoHits(rec.healthMemo);
+    if (hits.length) add('high', `${dayLabel(key)} メモに気になる言葉があります`, `検出: ${hits.join('、')}。メモ: ${rec.healthMemo}`, [key]);
+  });
+
+  [
+    { field:'food', value:'少なめ', label:'食事が少なめ' },
+    { field:'water', value:'かなり多い', label:'水をかなり多く飲む' },
+    { field:'urine', value:'少ない', label:'おしっこが少ない' },
+    { field:'urine', value:'かなり多い', label:'おしっこがかなり多い' },
+    { field:'walk', value:'乗り気じゃない', label:'散歩に乗り気じゃない' }
+  ].forEach(rule => {
+    findRuns(records, rec => rec[rule.field] === rule.value, 2).forEach(run => {
+      add('medium', `${dayLabel(run[0][0])}〜${dayLabel(run[run.length-1][0])} ${rule.label}記録が続いています`, '単発よりも連続している変化は診察時の手がかりになります。', run.map(([k]) => k));
+    });
+  });
+
+  const wt = records.filter(([,r]) => r.weight).map(([k,r]) => [k, parseFloat(r.weight)]).filter(([,v]) => !Number.isNaN(v));
+  for (let i = 1; i < wt.length; i++) {
+    const diff = Math.round((wt[i][1] - wt[i-1][1]) * 10) / 10;
+    const pct = Math.abs(diff) / wt[i-1][1];
+    if (Math.abs(diff) >= 0.3 || pct >= 0.05) {
+      const sign = diff > 0 ? '+' : '';
+      add('medium', `${dayLabel(wt[i-1][0])}から${dayLabel(wt[i][0])}で体重が${sign}${diff.toFixed(1)}kg変化`, '短期間の体重変化として病院で説明しやすい項目です。', [wt[i-1][0], wt[i][0]]);
+    }
+  }
+  if (wt.length >= 2) {
+    const monthDiff = Math.round((wt[wt.length-1][1] - wt[0][1]) * 10) / 10;
+    if (Math.abs(monthDiff) >= 0.5) {
+      const sign = monthDiff > 0 ? '+' : '';
+      add('medium', `月内で体重が${sign}${monthDiff.toFixed(1)}kg変化しています`, `${dayLabel(wt[0][0])} ${wt[0][1].toFixed(1)}kg → ${dayLabel(wt[wt.length-1][0])} ${wt[wt.length-1][1].toFixed(1)}kg`, [wt[0][0], wt[wt.length-1][0]]);
+    }
+  }
+
+  const filariaByMonth = {};
+  Object.entries(dayCache).forEach(([key, rec]) => {
+    if (!rec.filaria) return;
+    const month = Number(key.slice(5,7));
+    if (!FILARIA_MONTHS.includes(month)) return;
+    if (!filariaByMonth[month]) filariaByMonth[month] = [];
+    filariaByMonth[month].push(key);
+  });
+  Object.entries(filariaByMonth).forEach(([month, keys]) => {
+    if (keys.length > 1) add('medium', `${month}月にフィラリア投薬記録が複数あります`, `記録日: ${keys.map(dayLabel).join('、')}`, keys);
+  });
+
+  const rank = { high: 0, medium: 1, low: 2 };
+  return alerts.sort((a,b) => rank[a.level] - rank[b.level]).slice(0, 12);
+}
+
+function findRuns(records, predicate, minLen) {
+  const runs = [];
+  let run = [];
+  records.forEach(item => {
+    if (predicate(item[1])) {
+      run.push(item);
+    } else {
+      if (run.length >= minLen) runs.push(run);
+      run = [];
+    }
+  });
+  if (run.length >= minLen) runs.push(run);
+  return runs;
+}
+
 function renderMonthSummary() {
   const container = document.getElementById('monthSummary');
-  const prefix = `${currentYear}-${String(currentMonth).padStart(2,'0')}-`;
-  const records = Object.entries(dayCache)
-    .filter(([k]) => k.startsWith(prefix))
-    .sort(([a],[b]) => a.localeCompare(b));
-
+  const records = getMonthRecords();
   if (records.length === 0) {
-    container.innerHTML = `<div class="no-records">📭 この月の記録はまだありません</div>`;
+    container.innerHTML = `
+      <div class="report-card">
+        <div class="report-title">🏥 病院用レポート</div>
+        <div style="font-size:0.78rem;color:#666;line-height:1.6">この月の記録が入ると、診察用のまとめを表示できます。</div>
+      </div>
+      <div class="no-records">📭 この月の記録はまだありません</div>`;
     return;
   }
 
-  // ---- 集計 ----
-  const totalDays   = records.length;
+  const totalDays = records.length;
   const filariaCount = records.filter(([,r]) => r.filaria).length;
-  const weights     = records.filter(([,r]) => r.weight).map(([,r]) => parseFloat(r.weight));
-  const avgWeight   = weights.length ? (weights.reduce((s,v) => s+v, 0)/weights.length).toFixed(1) : null;
+  const weights = records.filter(([,r]) => r.weight).map(([,r]) => parseFloat(r.weight));
+  const avgWeight = weights.length ? (weights.reduce((s,v) => s+v, 0)/weights.length).toFixed(1) : null;
   const latestWeight = weights.length ? weights[weights.length-1].toFixed(1) : null;
-  const alertDays   = records.filter(([,r]) =>
-    r.food==='食べなかった' || r.water==='飲まなかった' || r.urine==='血尿あり' || r.walk==='行きたがらない'
-  ).length;
-  const photoDays   = records.filter(([,r]) => r.imageUrl).length;
+  const alertDays = records.filter(([,r]) => hasUrgentAlert(r) || memoHits(r.healthMemo).length).length;
+  const photoDays = records.filter(([,r]) => r.imageUrl).length;
+  const alerts = detectHealthAlerts(records);
 
-  let summaryHTML = `
+  let html = `
     <div class="summary-card">
       <div class="summary-card-title">📊 今月の集計</div>
       <div class="summary-grid">
@@ -792,177 +779,176 @@ function renderMonthSummary() {
         ${photoDays > 0 ? `<div class="s-item"><div class="s-val">${photoDays}枚</div><div class="s-lbl">📷 写真</div></div>` : ''}
       </div>
     </div>
+    ${renderInsights(alerts)}
+    <div class="report-card">
+      <div class="report-title">🏥 病院用レポート</div>
+      <div style="font-size:0.78rem;color:#555;line-height:1.6">今月の気になる変化、体重推移、日別記録を診察で見せやすい形式にまとめます。</div>
+      <div class="report-actions">
+        <button id="openReportBtn">レポートを見る</button>
+        <button class="secondary" id="printReportBtn">PDF保存・印刷</button>
+      </div>
+    </div>
+    ${renderStats(records)}
+    ${renderDayList(records)}
   `;
+  container.innerHTML = html;
+  document.getElementById('openReportBtn').addEventListener('click', openVetReport);
+  document.getElementById('printReportBtn').addEventListener('click', () => {
+    openVetReport();
+    setTimeout(() => window.print(), 100);
+  });
+  container.querySelectorAll('.day-item').forEach(el => {
+    el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
+  });
+}
 
-  // ---- 項目別統計 ----
+function renderInsights(alerts) {
+  if (!alerts.length) {
+    return `
+      <div class="insight-card is-calm">
+        <div class="insight-title">✅ 気になる変化</div>
+        <div class="insight-list">
+          <div class="insight-item">今月の記録からは、強い要注意サインや連続した変化は見つかっていません。</div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="insight-card">
+      <div class="insight-title">⚠️ 気になる変化</div>
+      <div class="insight-list">
+        ${alerts.map(a => `
+          <div class="insight-item">
+            <strong>${esc(a.title)}</strong>
+            <span class="insight-meta">${esc(a.detail)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderStats(records) {
   const CATS = [
-    { field:'food',  label:'🍽️ 食事量',
-      opts:['かなりよく食べた','よく食べた','普通','少なめ','食べなかった'],
-      alerts:['食べなかった'], best:['かなりよく食べた','よく食べた'] },
-    { field:'water', label:'💧 水の摂取量',
-      opts:['かなり多い','多い','普通','少なめ','飲まなかった'],
-      alerts:['飲まなかった'], best:['かなり多い','多い'] },
-    { field:'urine', label:'🚽 おしっこの様子',
-      opts:['かなり多い','多い','普通','少ない','血尿あり'],
-      alerts:['血尿あり'], best:['普通'] },
-    { field:'walk',  label:'🦮 散歩の様子',
-      opts:['かなり元気いっぱい','元気いっぱい','普通','乗り気じゃない','行きたがらない'],
-      alerts:['行きたがらない'], best:['かなり元気いっぱい','元気いっぱい'] },
+    { field:'food', label:'🍽️ 食事量', opts:['かなりよく食べた','よく食べた','普通','少なめ','食べなかった'], alerts:['食べなかった'], best:['かなりよく食べた','よく食べた'] },
+    { field:'water', label:'💧 水の摂取量', opts:['かなり多い','多い','普通','少なめ','飲まなかった'], alerts:['飲まなかった'], best:['普通'] },
+    { field:'urine', label:'🚽 おしっこの様子', opts:['かなり多い','多い','普通','少ない','血尿あり'], alerts:['血尿あり'], best:['普通'] },
+    { field:'walk', label:'🦮 散歩の様子', opts:['かなり元気いっぱい','元気いっぱい','普通','乗り気じゃない','行きたがらない'], alerts:['行きたがらない'], best:['かなり元気いっぱい','元気いっぱい'] }
   ];
-
-  let statsHTML = `<div class="stats-title">📈 項目別統計</div>`;
-
-  for (const cat of CATS) {
+  let html = `<div class="stats-title">📈 項目別統計</div>`;
+  CATS.forEach(cat => {
     const vals = records.map(([,r]) => r[cat.field]).filter(Boolean);
-    if (!vals.length) continue;
-
+    if (!vals.length) return;
     const counts = {};
     cat.opts.forEach(o => counts[o] = 0);
     vals.forEach(v => { if (v in counts) counts[v]++; });
     const maxC = Math.max(...Object.values(counts), 1);
     const hasAlert = cat.alerts.some(a => counts[a] > 0);
-
     const rows = cat.opts.map(opt => {
       const c = counts[opt];
       if (!c) return '';
       const pct = Math.round((c / maxC) * 100);
       const isAlert = cat.alerts.includes(opt);
-      const isBest  = cat.best.includes(opt);
-      const barCls  = isAlert ? 'bar-alert' : isBest ? 'bar-best' : '';
+      const isBest = cat.best.includes(opt);
+      const barCls = isAlert ? 'bar-alert' : isBest ? 'bar-best' : '';
       return `
         <div class="stat-row">
-          <div class="stat-label">${opt}</div>
-          <div class="stat-bar-wrap">
-            <div class="stat-bar ${barCls}" style="width:${pct}%"></div>
-          </div>
+          <div class="stat-label">${esc(opt)}</div>
+          <div class="stat-bar-wrap"><div class="stat-bar ${barCls}" style="width:${pct}%"></div></div>
           <div class="stat-count ${isAlert?'cnt-alert':''}"><strong>${c}</strong>日</div>
         </div>`;
     }).join('');
+    html += `<div class="stat-card${hasAlert?' stat-has-alert':''}"><div class="stat-card-title">${cat.label}（記録${vals.length}日分）</div>${rows}</div>`;
+  });
 
-    statsHTML += `
-      <div class="stat-card${hasAlert?' stat-has-alert':''}">
-        <div class="stat-card-title">${cat.label}（記録${vals.length}日分）</div>
-        ${rows}
-      </div>`;
-  }
-
-  // 体重推移
   const wtRecs = records.filter(([,r]) => r.weight);
   if (wtRecs.length >= 2) {
     const wMin = Math.min(...wtRecs.map(([,r]) => parseFloat(r.weight)));
     const wMax = Math.max(...wtRecs.map(([,r]) => parseFloat(r.weight)));
     const wRange = wMax - wMin || 1;
-
     const wtRows = wtRecs.map(([k,r], i) => {
-      const d   = parseInt(k.split('-')[2]);
+      const d = parseInt(k.split('-')[2]);
       const val = parseFloat(r.weight);
       const barPct = Math.round(((val - wMin) / wRange) * 100);
       let arrowHtml = '';
       if (i > 0) {
         const prev = parseFloat(wtRecs[i-1][1].weight);
         const diff = (val - prev).toFixed(1);
-        if      (diff > 0) arrowHtml = `<span class="wt-row-arrow wt-up">▲${diff}kg</span>`;
+        if (diff > 0) arrowHtml = `<span class="wt-row-arrow wt-up">▲${diff}kg</span>`;
         else if (diff < 0) arrowHtml = `<span class="wt-row-arrow wt-down">▼${Math.abs(diff)}kg</span>`;
-        else               arrowHtml = `<span class="wt-row-arrow wt-same">変化なし</span>`;
+        else arrowHtml = `<span class="wt-row-arrow wt-same">変化なし</span>`;
       }
       return `
         <div class="wt-row">
           <span class="wt-row-date">${currentMonth}/${d}日</span>
           <span class="wt-row-val">${val.toFixed(1)}kg</span>
-          <div class="wt-bar-wrap">
-            <div class="wt-bar" style="width:${Math.max(barPct,4)}%"></div>
-          </div>
+          <div class="wt-bar-wrap"><div class="wt-bar" style="width:${Math.max(barPct,4)}%"></div></div>
           ${arrowHtml}
         </div>`;
     }).join('');
-
-    statsHTML += `
-      <div class="stat-card">
-        <div class="stat-card-title">⚖️ 体重の推移（最小 ${wMin}kg ／ 最大 ${wMax}kg）</div>
-        <div class="weight-trend">${wtRows}</div>
-      </div>`;
+    html += `<div class="stat-card"><div class="stat-card-title">⚖️ 体重の推移（最小 ${wMin}kg ／ 最大 ${wMax}kg）</div><div class="weight-trend">${wtRows}</div></div>`;
   }
+  return html;
+}
 
-  // ---- 日別一覧 ----
-  let listHTML = `<div class="daylist-title">📋 日別記録一覧</div>`;
-
-  for (const [key, rec] of records) {
-    const d   = parseInt(key.split('-')[2]);
+function renderDayList(records) {
+  let html = `<div class="daylist-title">📋 日別記録一覧</div>`;
+  records.forEach(([key, rec]) => {
+    const d = parseInt(key.split('-')[2]);
     const dow = DOW_JP[new Date(currentYear, currentMonth-1, d).getDay()];
-    const isAlert = rec.food==='食べなかった' || rec.water==='飲まなかった' || rec.urine==='血尿あり' || rec.walk==='行きたがらない';
-
+    const isAlert = hasUrgentAlert(rec) || memoHits(rec.healthMemo).length;
     let badges = '';
-    if (rec.filaria)    badges += `<span class="dbadge db-filaria">💊 投薬済み</span>`;
-    if (rec.weight)     badges += `<span class="dbadge db-weight">⚖️ ${rec.weight}kg</span>`;
-    if (rec.food)       badges += `<span class="dbadge db-food${rec.food==='食べなかった'?' db-alert':''}">🍽️ ${rec.food}</span>`;
-    if (rec.water)      badges += `<span class="dbadge db-water${rec.water==='飲まなかった'?' db-alert':''}">💧 ${rec.water}</span>`;
-    if (rec.urine)      badges += `<span class="dbadge db-urine${rec.urine==='血尿あり'?' db-alert':''}">🚽 ${rec.urine}</span>`;
-    if (rec.walk)       badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${rec.walk}</span>`;
-    if (rec.imageUrl)   badges += `<span class="dbadge db-photo">📷 写真あり</span>`;
-    if (rec.healthMemo) badges += `<span class="dbadge db-memo">📋 ${rec.healthMemo.length>18 ? rec.healthMemo.substring(0,18)+'…' : rec.healthMemo}</span>`;
-
-    listHTML += `
+    if (rec.filaria) badges += `<span class="dbadge db-filaria">💊 投薬済み</span>`;
+    if (rec.weight) badges += `<span class="dbadge db-weight">⚖️ ${esc(rec.weight)}kg</span>`;
+    if (rec.food) badges += `<span class="dbadge db-food${rec.food==='食べなかった'?' db-alert':''}">🍽️ ${esc(rec.food)}</span>`;
+    if (rec.water) badges += `<span class="dbadge db-water${rec.water==='飲まなかった'?' db-alert':''}">💧 ${esc(rec.water)}</span>`;
+    if (rec.urine) badges += `<span class="dbadge db-urine${rec.urine==='血尿あり'?' db-alert':''}">🚽 ${esc(rec.urine)}</span>`;
+    if (rec.walk) badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${esc(rec.walk)}</span>`;
+    if (rec.imageUrl) badges += `<span class="dbadge db-photo">📷 写真あり</span>`;
+    if (rec.healthMemo) badges += `<span class="dbadge db-memo">📋 ${esc(rec.healthMemo.length>18 ? rec.healthMemo.substring(0,18)+'…' : rec.healthMemo)}</span>`;
+    html += `
       <div class="day-item${isAlert?' day-alert':''}" data-key="${key}" data-day="${d}">
         <div class="day-item-hd">
           <span class="day-item-date">${currentMonth}月${d}日（${dow}）${isAlert?'⚠️':''}</span>
           <span class="day-edit-hint">タップして編集 ✏️</span>
         </div>
         <div class="day-badges">${badges}</div>
-      </div>
-    `;
-  }
-
-  container.innerHTML = summaryHTML + statsHTML + listHTML;
-
-  container.querySelectorAll('.day-item').forEach(el => {
-    el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
+      </div>`;
   });
+  return html;
 }
 
 function renderCalendar() {
   document.getElementById('monthLabel').textContent = `${currentYear}年 ${MONTH_JP[currentMonth]}`;
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
-
   const firstDow = new Date(currentYear, currentMonth - 1, 1).getDay();
   const lastDate = new Date(currentYear, currentMonth, 0).getDate();
-
   for (let i = 0; i < firstDow; i++) {
     const blank = document.createElement('div');
     blank.className = 'cal-cell empty';
     grid.appendChild(blank);
   }
-
   for (let d = 1; d <= lastDate; d++) {
     const key = fmt(currentYear, currentMonth, d);
     const rec = dayCache[key];
-    const isToday    = key === todayKey;
+    const isToday = key === todayKey;
     const hasFilaria = !!rec?.filaria;
-    const hasWeight  = !!rec?.weight;
-    const hasPhoto   = !!rec?.imageUrl;
-    const hasHealth  = rec && (rec.food || rec.water || rec.urine || rec.walk || rec.healthMemo);
-    const isAlert    = rec && (rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.walk === '行きたがらない');
-    const hasAny     = hasFilaria || hasWeight || hasHealth || hasPhoto;
-
+    const hasWeight = !!rec?.weight;
+    const hasPhoto = !!rec?.imageUrl;
+    const hasHealth = rec && (rec.food || rec.water || rec.urine || rec.walk || rec.healthMemo);
+    const isAlert = rec && (hasUrgentAlert(rec) || hasSoftAlert(rec) || memoHits(rec.healthMemo).length);
+    const hasAny = hasFilaria || hasWeight || hasHealth || hasPhoto;
     const dow = (firstDow + d - 1) % 7;
     let dateColor = '#555';
     if (dow === 0) dateColor = '#E53935';
     if (dow === 6) dateColor = '#1E88E5';
-    if (isToday)   dateColor = '#1565C0';
-
+    if (isToday) dateColor = '#1565C0';
     let dots = '';
     if (hasFilaria) dots += '<span class="cal-dot dot-filaria"></span>';
-    if (hasWeight)  dots += '<span class="cal-dot dot-weight"></span>';
-    if (isAlert)    dots += '<span class="cal-dot dot-alert"></span>';
+    if (hasWeight) dots += '<span class="cal-dot dot-weight"></span>';
+    if (isAlert) dots += '<span class="cal-dot dot-alert"></span>';
     else if (hasHealth) dots += '<span class="cal-dot dot-health"></span>';
-
     const cell = document.createElement('div');
     cell.className = 'cal-cell' + (isToday ? ' today' : '') + (hasAny ? ' has-data' : '');
-    cell.innerHTML = `
-      <div class="cal-date" style="color:${dateColor}">${d}</div>
-      <div class="cal-dots">${dots}</div>
-      ${hasPhoto ? '<div class="cal-camera">📷</div>' : ''}
-    `;
+    cell.innerHTML = `<div class="cal-date" style="color:${dateColor}">${d}</div><div class="cal-dots">${dots}</div>${hasPhoto ? '<div class="cal-camera">📷</div>' : ''}`;
     cell.addEventListener('click', () => openModal(key, d));
     grid.appendChild(cell);
   }
@@ -973,51 +959,46 @@ function openModal(key, day) {
   const rec = dayCache[key] || {};
   const dow = DOW_JP[new Date(currentYear, currentMonth-1, day).getDay()];
   document.getElementById('modalTitle').textContent = `${currentMonth}月${day}日（${dow}）の記録`;
-
   document.getElementById('filariaCheck').checked = !!rec.filaria;
   setWeightState(rec.weight || null);
-  setChoice('foodGroup',  rec.food  || null);
+  setChoice('foodGroup', rec.food || null);
   setChoice('waterGroup', rec.water || null);
   setChoice('urineGroup', rec.urine || null);
-  setChoice('walkGroup',  rec.walk  || null);
+  setChoice('walkGroup', rec.walk || null);
   setPhotoState(rec.imageUrl || null);
   document.getElementById('healthMemoInput').value = rec.healthMemo || '';
-
   const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo;
   document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
   document.getElementById('modalOverlay').classList.remove('hidden');
   document.getElementById('modalBody').scrollTop = 0;
 }
-
 function closeModal() {
   document.getElementById('modalOverlay').classList.add('hidden');
   currentModalDate = null;
 }
-
 async function saveRecord() {
   if (!currentModalDate) return;
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true; btn.textContent = '保存中...';
+  btn.disabled = true;
+  btn.textContent = '保存中...';
   try {
-    const filaria    = document.getElementById('filariaCheck').checked;
-    const weight     = weightEnableEl.checked ? weightValueEl.textContent : null;
-    const food       = getChoice('foodGroup');
-    const water      = getChoice('waterGroup');
-    const urine      = getChoice('urineGroup');
-    const walk       = getChoice('walkGroup');
+    const filaria = document.getElementById('filariaCheck').checked;
+    const weight = weightEnableEl.checked ? weightValueEl.textContent : null;
+    const food = getChoice('foodGroup');
+    const water = getChoice('waterGroup');
+    const urine = getChoice('urineGroup');
+    const walk = getChoice('walkGroup');
     const healthMemo = document.getElementById('healthMemoInput').value.trim();
-    const imageUrl   = await handlePhotoSave();
-
+    const imageUrl = await handlePhotoSave();
     const data = {};
-    if (filaria)    data.filaria    = true;
-    if (weight)     data.weight     = weight;
-    if (food)       data.food       = food;
-    if (water)      data.water      = water;
-    if (urine)      data.urine      = urine;
-    if (walk)       data.walk       = walk;
-    if (imageUrl)   data.imageUrl   = imageUrl;
+    if (filaria) data.filaria = true;
+    if (weight) data.weight = weight;
+    if (food) data.food = food;
+    if (water) data.water = water;
+    if (urine) data.urine = urine;
+    if (walk) data.walk = walk;
+    if (imageUrl) data.imageUrl = imageUrl;
     if (healthMemo) data.healthMemo = healthMemo;
-
     if (Object.keys(data).length === 0) { alert('何か入力してから記録してください。'); return; }
     await db.collection('filaria').doc(currentModalDate).set(data);
     closeModal();
@@ -1025,39 +1006,137 @@ async function saveRecord() {
     console.error(e);
     alert('保存に失敗しました。\n' + e.message);
   } finally {
-    btn.disabled = false; btn.textContent = '✨ 記録する';
+    btn.disabled = false;
+    btn.textContent = '✨ 記録する';
     photoProgressEl.textContent = '';
   }
 }
-
 async function deleteRecord() {
   if (!currentModalDate) return;
   if (!confirm('この日の記録を削除しますか？')) return;
   try {
     const rec = dayCache[currentModalDate];
     if (rec?.imageUrl) {
-      try { await storage.refFromURL(rec.imageUrl).delete(); } catch(e) { /* 無視 */ }
+      try { await storage.refFromURL(rec.imageUrl).delete(); } catch(e) {}
     }
     await db.collection('filaria').doc(currentModalDate).delete();
     closeModal();
-  } catch(e) { alert('削除に失敗しました。\n' + e.message); }
+  } catch(e) {
+    alert('削除に失敗しました。\n' + e.message);
+  }
 }
 
-document.getElementById('prevYear').addEventListener('click',  () => { currentYear--; loadYearData(); });
-document.getElementById('nextYear').addEventListener('click',  () => { currentYear++; loadYearData(); });
+function buildReportHtml(records) {
+  const alerts = detectHealthAlerts(records);
+  const weights = records.filter(([,r]) => r.weight).map(([k,r]) => [k, parseFloat(r.weight)]).filter(([,v]) => !Number.isNaN(v));
+  const latestWeight = weights.length ? `${weights[weights.length-1][1].toFixed(1)}kg（${dayLabel(weights[weights.length-1][0])}）` : '記録なし';
+  const weightChange = weights.length >= 2 ? `${(weights[weights.length-1][1] - weights[0][1] >= 0 ? '+' : '')}${(weights[weights.length-1][1] - weights[0][1]).toFixed(1)}kg` : '比較なし';
+  const filariaDays = records.filter(([,r]) => r.filaria).map(([k]) => dayLabel(k));
+  const alertDayCount = records.filter(([,r]) => hasUrgentAlert(r) || memoHits(r.healthMemo).length).length;
+  const firstDay = records[0]?.[0] || fmt(currentYear, currentMonth, 1);
+  const lastDay = records[records.length-1]?.[0] || fmt(currentYear, currentMonth, new Date(currentYear, currentMonth, 0).getDate());
+
+  return `
+    <div class="report-top">
+      <div>
+        <h2>にこちゃん 健康記録レポート</h2>
+        <div class="report-period">期間: ${esc(dayLabel(firstDay))}〜${esc(dayLabel(lastDay))}（${currentYear}年${currentMonth}月）<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+      </div>
+      <div>
+        <button class="report-print" id="reportPrintBtn">PDF保存・印刷</button>
+        <button class="report-close" id="reportCloseBtn">閉じる</button>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>基本情報</h3>
+      <div class="report-kpis">
+        <div class="report-kpi"><strong>${records.length}日</strong><span>記録日数</span></div>
+        <div class="report-kpi"><strong>${esc(latestWeight)}</strong><span>最新体重</span></div>
+        <div class="report-kpi"><strong>${esc(weightChange)}</strong><span>月内体重変化</span></div>
+        <div class="report-kpi"><strong>${alertDayCount}日</strong><span>要注意日の数</span></div>
+      </div>
+      <div class="report-note">フィラリア投薬: ${filariaDays.length ? esc(filariaDays.join('、')) : 'この期間の投薬記録なし'}</div>
+    </div>
+
+    <div class="report-section">
+      <h3>重要な変化</h3>
+      <div class="report-alert-list">
+        ${alerts.length ? alerts.map(a => `<div class="report-alert"><strong>${esc(a.title)}</strong><br>${esc(a.detail)}</div>`).join('') : '<div class="report-day">強い要注意サインや連続した変化は見つかっていません。</div>'}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>体重推移</h3>
+      <div class="report-day-list">
+        ${weights.length ? weights.map(([k,v], i) => {
+          let diff = '';
+          if (i > 0) {
+            const delta = v - weights[i-1][1];
+            diff = `（前回比 ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}kg）`;
+          }
+          return `<div class="report-day"><strong>${esc(dayLabel(k))}</strong> ${v.toFixed(1)}kg ${diff}</div>`;
+        }).join('') : '<div class="report-day">体重の記録はありません。</div>'}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>日別記録</h3>
+      <div class="report-day-list">
+        ${records.map(([key, r]) => `
+          <div class="report-day">
+            <strong>${esc(dayLabel(key))}</strong>
+            ${hasUrgentAlert(r) || memoHits(r.healthMemo).length ? ' ⚠️' : ''}<br>
+            ${r.weight ? `体重: ${esc(r.weight)}kg　` : ''}
+            ${r.filaria ? 'フィラリア: 投薬済み　' : ''}
+            ${r.food ? `食事: ${esc(r.food)}　` : ''}
+            ${r.water ? `水: ${esc(r.water)}　` : ''}
+            ${r.urine ? `おしっこ: ${esc(r.urine)}　` : ''}
+            ${r.walk ? `散歩: ${esc(r.walk)}　` : ''}
+            ${r.healthMemo ? `<br>メモ: ${esc(r.healthMemo)}` : ''}
+            ${r.imageUrl ? `<br><span class="report-photo-link">写真あり</span>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="report-note">このレポートは記録を整理するためのものです。診断ではないため、気になる症状がある場合は獣医師に相談してください。</div>
+  `;
+}
+function openVetReport() {
+  const records = getMonthRecords();
+  document.getElementById('vetReport').innerHTML = buildReportHtml(records);
+  document.getElementById('reportOverlay').classList.remove('hidden');
+  document.getElementById('reportCloseBtn').addEventListener('click', closeVetReport);
+  document.getElementById('reportPrintBtn').addEventListener('click', () => window.print());
+}
+function closeVetReport() {
+  document.getElementById('reportOverlay').classList.add('hidden');
+}
+
+document.getElementById('prevYear').addEventListener('click', () => { currentYear--; loadYearData(); });
+document.getElementById('nextYear').addEventListener('click', () => { currentYear++; loadYearData(); });
 document.getElementById('prevMonth').addEventListener('click', () => {
-  if (currentMonth === 1)  { currentMonth = 12; currentYear--; loadYearData(); }
+  if (currentMonth === 1) { currentMonth = 12; currentYear--; loadYearData(); }
   else { currentMonth--; renderCalendar(); renderMonthSummary(); }
 });
 document.getElementById('nextMonth').addEventListener('click', () => {
   if (currentMonth === 12) { currentMonth = 1; currentYear++; loadYearData(); }
   else { currentMonth++; renderCalendar(); renderMonthSummary(); }
 });
-document.getElementById('saveBtn').addEventListener('click',    saveRecord);
-document.getElementById('deleteBtn').addEventListener('click',  deleteRecord);
+document.getElementById('saveBtn').addEventListener('click', saveRecord);
+document.getElementById('deleteBtn').addEventListener('click', deleteRecord);
 document.getElementById('modalCancel').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById('reportOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeVetReport();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeVetReport();
+  }
 });
 
 function setConn(state, html) {
