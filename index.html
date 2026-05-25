@@ -198,6 +198,7 @@
     .db-food { background: #EDE7F6; color: #4527A0; }
     .db-water { background: #B3E5FC; color: #01579B; }
     .db-urine { background: #C5CAE9; color: #1A237E; }
+    .db-night { background: #D1C4E9; color: #311B92; }
     .db-walk { background: #DCEDC8; color: #33691E; }
     .db-photo { background: #FFE0B2; color: #E65100; }
     .db-memo { background: #FFF9C4; color: #F57F17; }
@@ -224,6 +225,7 @@
     .sec-food { background: #EDE7F6; border: 3px solid #7E57C2; }
     .sec-water { background: #E1F5FE; border: 3px solid #0288D1; }
     .sec-urine { background: #E8EAF6; border: 3px solid #3F51B5; }
+    .sec-night { background: #F3E5F5; border: 3px solid #8E24AA; }
     .sec-walk { background: #E0F2F1; border: 3px solid #00897B; }
     .sec-photo { background: #FFF3E0; border: 3px solid #FF9800; }
     .sec-memo { background: #FFF9C4; border: 3px solid #F9A825; }
@@ -257,6 +259,7 @@
     .sec-food .btn-choice.selected { background: #7E57C2; border-color: #4527A0; color: white; font-weight: bold; box-shadow: 0 3px 0 #311B92; }
     .sec-water .btn-choice.selected { background: #0288D1; border-color: #01579B; color: white; font-weight: bold; box-shadow: 0 3px 0 #01579B; }
     .sec-urine .btn-choice.selected { background: #3F51B5; border-color: #1A237E; color: white; font-weight: bold; box-shadow: 0 3px 0 #0D47A1; }
+    .sec-night .btn-choice.selected { background: #8E24AA; border-color: #4A148C; color: white; font-weight: bold; box-shadow: 0 3px 0 #4A148C; }
     .sec-walk .btn-choice.selected { background: #00897B; border-color: #004D40; color: white; font-weight: bold; box-shadow: 0 3px 0 #00251A; }
     .btn-choice.alert-choice.selected { background: #E53935 !important; border-color: #B71C1C !important; color: white !important; box-shadow: 0 3px 0 #7F0000 !important; }
     .photo-preview { border-radius: 12px; overflow: hidden; border: 2.5px solid #FF9800; margin-bottom: 10px; position: relative; }
@@ -445,6 +448,15 @@
       </div>
     </div>
 
+    <div class="sec-card sec-night">
+      <div class="sec-label">🌙 夜間おむつのおもらし</div>
+      <div class="btn-group" id="nightAccidentGroup">
+        <button class="btn-choice alert-choice" data-val="あり大量">💦 あり大量</button>
+        <button class="btn-choice" data-val="あり少な目">💧 あり少な目</button>
+        <button class="btn-choice" data-val="なし">✅ なし</button>
+      </div>
+    </div>
+
     <div class="sec-card sec-walk">
       <div class="sec-label">🦮 散歩の様子</div>
       <div class="btn-group" id="walkGroup">
@@ -535,7 +547,7 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-['foodGroup','waterGroup','urineGroup','walkGroup'].forEach(gid => {
+['foodGroup','waterGroup','urineGroup','nightAccidentGroup','walkGroup'].forEach(gid => {
   document.getElementById(gid).querySelectorAll('.btn-choice').forEach(btn => {
     btn.addEventListener('click', () => {
       const was = btn.classList.contains('selected');
@@ -549,6 +561,7 @@ document.getElementById('quickNormalBtn').addEventListener('click', () => {
   setChoice('foodGroup', '普通');
   setChoice('waterGroup', '普通');
   setChoice('urineGroup', '普通');
+  setChoice('nightAccidentGroup', 'なし');
     setChoice('walkGroup', '普通');
 });
 document.getElementById('healthMemoInput').addEventListener('input', updateMemoAlertBox);
@@ -738,15 +751,15 @@ function reportRangeLabel() {
 function getTodayRecordState() {
   const isThisMonth = currentYear === todayObj.getFullYear() && currentMonth === todayObj.getMonth() + 1;
   const rec = isThisMonth ? dayCache[todayKey] : null;
-  const hasAny = !!(rec && (rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo));
+  const hasAny = !!(rec && (rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo));
   return { isThisMonth, rec, hasAny };
 }
 
 function hasUrgentAlert(rec) {
-  return rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.walk === '行きたがらない';
+  return rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.nightAccident === 'あり大量' || rec.walk === '行きたがらない';
 }
 function hasSoftAlert(rec) {
-  return rec.food === '少なめ' || rec.water === 'かなり多い' || rec.urine === '少ない' || rec.urine === 'かなり多い' || rec.walk === '乗り気じゃない';
+  return rec.food === '少なめ' || rec.water === 'かなり多い' || rec.urine === '少ない' || rec.urine === 'かなり多い' || rec.nightAccident === 'あり少な目' || rec.walk === '乗り気じゃない';
 }
 function memoHits(memo) {
   if (!memo) return [];
@@ -826,6 +839,7 @@ function detectHealthAlerts(records) {
     if (rec.food === '食べなかった') add('high', `${dayLabel(key)} 食事を食べなかった記録があります`, '食欲の低下は診察時に伝えたい大事な情報です。', [key]);
     if (rec.water === '飲まなかった') add('high', `${dayLabel(key)} 水を飲まなかった記録があります`, '飲水量の低下が続く場合は注意してください。', [key]);
     if (rec.urine === '血尿あり') add('high', `${dayLabel(key)} 血尿の記録があります`, '血尿は病院で必ず伝えたい項目です。', [key]);
+    if (rec.nightAccident === 'あり大量') add('medium', `${dayLabel(key)} 夜間おむつのおもらしが大量です`, '夜間の尿量変化として、飲水量やおしっこの様子と一緒に見返せます。', [key]);
     if (rec.walk === '行きたがらない') add('high', `${dayLabel(key)} 散歩に行きたがらない記録があります`, '痛みや体調不良のサインとして見返せます。', [key]);
     const hits = memoHits(rec.healthMemo);
     if (hits.length) {
@@ -839,6 +853,8 @@ function detectHealthAlerts(records) {
     { field:'water', value:'かなり多い', label:'水をかなり多く飲む' },
     { field:'urine', value:'少ない', label:'おしっこが少ない' },
     { field:'urine', value:'かなり多い', label:'おしっこがかなり多い' },
+    { field:'nightAccident', value:'あり大量', label:'夜間おむつのおもらしが大量' },
+    { field:'nightAccident', value:'あり少な目', label:'夜間おむつのおもらしあり' },
     { field:'walk', value:'乗り気じゃない', label:'散歩に乗り気じゃない' }
   ].forEach(rule => {
     findRuns(records, rec => rec[rule.field] === rule.value, 2).forEach(run => {
@@ -1052,6 +1068,7 @@ function renderStats(records) {
     { field:'food', label:'🍽️ 食事量', opts:['かなりよく食べた','よく食べた','普通','少なめ','食べなかった'], alerts:['食べなかった'], best:['かなりよく食べた','よく食べた'] },
     { field:'water', label:'💧 水の摂取量', opts:['かなり多い','多い','普通','少なめ','飲まなかった'], alerts:['飲まなかった'], best:['普通'] },
     { field:'urine', label:'🚽 おしっこの様子', opts:['かなり多い','多い','普通','少ない','血尿あり'], alerts:['血尿あり'], best:['普通'] },
+    { field:'nightAccident', label:'🌙 夜間おむつのおもらし', opts:['あり大量','あり少な目','なし'], alerts:['あり大量'], best:['なし'] },
     { field:'walk', label:'🦮 散歩の様子', opts:['かなり元気いっぱい','元気いっぱい','普通','乗り気じゃない','行きたがらない'], alerts:['行きたがらない'], best:['かなり元気いっぱい','元気いっぱい'] }
   ];
   let html = `<div class="stats-title">📈 項目別統計</div>`;
@@ -1136,6 +1153,7 @@ function renderDayList(records) {
     if (rec.food) badges += `<span class="dbadge db-food${rec.food==='食べなかった'?' db-alert':''}">🍽️ ${esc(rec.food)}</span>`;
     if (rec.water) badges += `<span class="dbadge db-water${rec.water==='飲まなかった'?' db-alert':''}">💧 ${esc(rec.water)}</span>`;
     if (rec.urine) badges += `<span class="dbadge db-urine${rec.urine==='血尿あり'?' db-alert':''}">🚽 ${esc(rec.urine)}</span>`;
+    if (rec.nightAccident) badges += `<span class="dbadge db-night${rec.nightAccident==='あり大量'?' db-alert':''}">🌙 おもらし ${esc(rec.nightAccident)}</span>`;
     if (rec.walk) badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${esc(rec.walk)}</span>`;
     if (rec.imageUrl) badges += `<span class="dbadge db-photo">📷 写真あり</span>`;
     if (rec.healthMemo) badges += `<span class="dbadge db-memo">📋 ${esc(rec.healthMemo.length>18 ? rec.healthMemo.substring(0,18)+'…' : rec.healthMemo)}</span>`;
@@ -1169,7 +1187,7 @@ function renderCalendar() {
     const hasFilaria = !!rec?.filaria;
     const hasWeight = !!rec?.weight;
     const hasPhoto = !!rec?.imageUrl;
-    const hasHealth = rec && (rec.food || rec.water || rec.urine || rec.walk || rec.healthMemo);
+    const hasHealth = rec && (rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.healthMemo);
     const isAlert = rec && (hasUrgentAlert(rec) || hasSoftAlert(rec) || memoHits(rec.healthMemo).length);
     const hasAny = hasFilaria || hasWeight || hasHealth || hasPhoto;
     const dow = (firstDow + d - 1) % 7;
@@ -1200,11 +1218,12 @@ function openModal(key, day) {
   setChoice('foodGroup', rec.food || null);
   setChoice('waterGroup', rec.water || null);
   setChoice('urineGroup', rec.urine || null);
+  setChoice('nightAccidentGroup', rec.nightAccident || null);
   setChoice('walkGroup', rec.walk || null);
   setPhotoState(rec.imageUrl || null);
   document.getElementById('healthMemoInput').value = rec.healthMemo || '';
   updateMemoAlertBox();
-  const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo;
+  const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo;
   document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
   document.getElementById('modalOverlay').classList.remove('hidden');
   document.getElementById('modalBody').scrollTop = 0;
@@ -1224,6 +1243,7 @@ async function saveRecord() {
     const food = getChoice('foodGroup');
     const water = getChoice('waterGroup');
     const urine = getChoice('urineGroup');
+    const nightAccident = getChoice('nightAccidentGroup');
     const walk = getChoice('walkGroup');
     const healthMemo = document.getElementById('healthMemoInput').value.trim();
     const imageUrl = await handlePhotoSave();
@@ -1233,6 +1253,7 @@ async function saveRecord() {
     if (food) data.food = food;
     if (water) data.water = water;
     if (urine) data.urine = urine;
+    if (nightAccident) data.nightAccident = nightAccident;
     if (walk) data.walk = walk;
     if (imageUrl) data.imageUrl = imageUrl;
     if (healthMemo) data.healthMemo = healthMemo;
@@ -1346,6 +1367,7 @@ function buildReportHtml(records) {
             ${r.food ? `食事: ${esc(r.food)}　` : ''}
             ${r.water ? `水: ${esc(r.water)}　` : ''}
             ${r.urine ? `おしっこ: ${esc(r.urine)}　` : ''}
+            ${r.nightAccident ? `夜間おむつ: ${esc(r.nightAccident)}　` : ''}
             ${r.walk ? `散歩: ${esc(r.walk)}　` : ''}
             ${r.healthMemo ? `<br>メモ: ${esc(r.healthMemo)}` : ''}
             ${r.imageUrl ? `<br><span class="report-photo-link">写真あり</span>` : ''}
