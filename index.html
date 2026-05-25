@@ -96,16 +96,24 @@
     }
 
     .month-summary { padding: 0 10px 28px; }
-    .summary-card, .insight-card, .report-card {
+    .summary-card, .insight-card, .report-card, .today-card {
       background: white; border-radius: 16px; border: 3px solid #5B9BD5;
       box-shadow: 0 3px 0 #2D6A9F; padding: 14px 14px 12px; margin-bottom: 12px;
     }
+    .today-card { border-color: #F9A825; box-shadow: 0 3px 0 #F57F17; }
     .insight-card { border-color: #EF5350; box-shadow: 0 3px 0 #B71C1C; }
     .insight-card.is-calm { border-color: #26A69A; box-shadow: 0 3px 0 #00796B; }
     .report-card { border-color: #00897B; box-shadow: 0 3px 0 #004D40; }
-    .summary-card-title, .insight-title, .report-title, .daylist-title, .stats-title {
+    .summary-card-title, .insight-title, .report-title, .daylist-title, .stats-title, .today-title {
       font-size: 0.88rem; font-weight: bold; color: #2D6A9F; margin-bottom: 10px;
       display: flex; align-items: center; gap: 5px;
+    }
+    .today-title { color: #E65100; }
+    .today-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .today-status { font-size: 0.78rem; color: #555; line-height: 1.55; }
+    .today-action {
+      flex-shrink: 0; border: none; border-radius: 14px; background: #F9A825; color: white;
+      padding: 12px 14px; font-weight: bold; box-shadow: 0 3px 0 #F57F17; cursor: pointer;
     }
     .insight-title { color: #B71C1C; }
     .insight-card.is-calm .insight-title { color: #00796B; }
@@ -117,6 +125,16 @@
     }
     .insight-card.is-calm .insight-item { background: #F1FBF8; border-color: #B2DFDB; color: #00695C; }
     .insight-item strong { color: #B71C1C; }
+    .insight-item.level-high { border-color: #EF5350; background: #FFF5F5; }
+    .insight-item.level-medium { border-color: #FFB74D; background: #FFF8EF; }
+    .insight-item.level-low { border-color: #90CAF9; background: #F5FAFF; }
+    .insight-level {
+      display: inline-block; margin-right: 5px; border-radius: 20px; padding: 2px 7px;
+      font-size: 0.64rem; color: white; background: #777; vertical-align: 1px;
+    }
+    .insight-level.level-high { background: #D32F2F; }
+    .insight-level.level-medium { background: #EF6C00; }
+    .insight-level.level-low { background: #1976D2; }
     .insight-meta { display: block; margin-top: 2px; color: #777; font-size: 0.68rem; }
     .report-actions { display: flex; gap: 8px; margin-top: 10px; }
     .report-actions button {
@@ -124,6 +142,15 @@
       padding: 12px 10px; font-weight: bold; box-shadow: 0 3px 0 #004D40; cursor: pointer;
     }
     .report-actions button.secondary { background: white; color: #00695C; border: 2px solid #80CBC4; box-shadow: 0 3px 0 #80CBC4; }
+    .report-range, .day-filter {
+      display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+    }
+    .report-range button, .day-filter button {
+      border: 2px solid #D6EAF8; background: white; color: #46637A;
+      border-radius: 20px; padding: 7px 11px; font-size: 0.72rem; font-weight: bold; cursor: pointer;
+    }
+    .report-range button.active { background: #00897B; color: white; border-color: #004D40; }
+    .day-filter button.active { background: #5B9BD5; color: white; border-color: #2D6A9F; }
     .summary-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .s-item { background: #EBF4FF; border-radius: 12px; padding: 8px 12px; text-align: center; min-width: 64px; border: 2px solid #AACDE8; }
     .s-item.s-alert { background: #FFEBEE; border-color: #EF9A9A; }
@@ -240,6 +267,15 @@
     .photo-upload-progress { font-size: 0.78rem; color: #FF9800; text-align: center; margin-top: 6px; min-height: 18px; font-weight: bold; }
     .modal textarea { width: 100%; padding: 10px 12px; border: 2.5px solid #F9A825; border-radius: 12px; font-size: 0.88rem; resize: none; height: 68px; background: white; }
     .modal textarea:focus { outline: none; border-color: #F57F17; }
+    .memo-alert-box {
+      display: none; margin-top: 8px; border-radius: 12px; padding: 9px 10px;
+      font-size: 0.72rem; line-height: 1.55; border: 2px solid #D6EAF8; background: white;
+    }
+    .memo-alert-box.show { display: block; }
+    .memo-alert-box.has-alert { border-color: #FFB74D; background: #FFF8EF; }
+    .memo-alert-box.has-high { border-color: #EF5350; background: #FFF5F5; }
+    .memo-alert-title { font-weight: bold; color: #5D4037; margin-bottom: 3px; }
+    .memo-alert-text { color: #666; }
     .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
     .modal-btn { flex: 1; padding: 14px 10px; border: none; border-radius: 16px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
     .modal-btn.primary { background: #5B9BD5; color: white; box-shadow: 0 5px 0 #2D6A9F; }
@@ -436,6 +472,10 @@
     <div class="sec-card sec-memo">
       <div class="sec-label">📋 その他体調メモ</div>
       <textarea id="healthMemoInput" placeholder="例：元気がなかった、嘔吐があった など"></textarea>
+      <div class="memo-alert-box show" id="memoAlertBox">
+        <div class="memo-alert-title">記録のヒント</div>
+        <div class="memo-alert-text">症状がある時は、時間・回数・色・量・食欲・元気さを書くと病院で伝えやすくなります。</div>
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -466,7 +506,16 @@ const MONTH_JP = ['','1月','2月','3月','4月','5月','6月','7月','8月','9�
 const DOW_JP = ['日','月','火','水','木','金','土'];
 const FILARIA_MONTHS = [5,6,7,8,9,10,11,12];
 const DEFAULT_WEIGHT = 7.5;
-const MEMO_ALERT_KEYWORDS = ['嘔吐','吐いた','下痢','血','咳','震え','ぐったり','元気ない','元気がない','痛そう','食欲なし','けいれん','発作'];
+const MEMO_ALERT_RULES = [
+  { level:'high', category:'呼吸', words:['息が荒い','息が早い','呼吸が荒い','呼吸が早い','呼吸が苦しそう','息苦しそう'] },
+  { level:'high', category:'神経', words:['けいれん','痙攣','発作','意識がない','倒れた'] },
+  { level:'high', category:'出血', words:['血尿','血便','吐血','血が混じる'] },
+  { level:'medium', category:'消化器', words:['嘔吐','吐いた','吐く','もどした','下痢','食欲なし','食欲がない'] },
+  { level:'medium', category:'活動性', words:['ぐったり','元気ない','元気がない','立てない','歩けない'] },
+  { level:'low', category:'呼吸', words:['咳','せき','くしゃみ'] },
+  { level:'low', category:'様子', words:['震え','震える','痛そう','かゆい','かゆがる'] }
+];
+const MEMO_NEGATION_WORDS = ['なし','ない','無い','していない','してない','出ていない','出てない','見られない','みられない','ありません','なかった'];
 
 const todayObj = new Date();
 const todayKey = fmt(todayObj.getFullYear(), todayObj.getMonth()+1, todayObj.getDate());
@@ -479,6 +528,8 @@ let weightVal = DEFAULT_WEIGHT;
 let currentPhotoUrl = null;
 let currentPhotoFile = null;
 let photoRemoved = false;
+let dayListFilter = 'all';
+let reportRange = 'month';
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.firestore();
@@ -498,8 +549,9 @@ document.getElementById('quickNormalBtn').addEventListener('click', () => {
   setChoice('foodGroup', '普通');
   setChoice('waterGroup', '普通');
   setChoice('urineGroup', '普通');
-  setChoice('walkGroup', '普通');
+    setChoice('walkGroup', '普通');
 });
+document.getElementById('healthMemoInput').addEventListener('input', updateMemoAlertBox);
 
 function getChoice(gid) {
   const s = document.getElementById(gid).querySelector('.btn-choice.selected');
@@ -660,6 +712,35 @@ function getMonthRecords() {
   const prefix = `${currentYear}-${String(currentMonth).padStart(2,'0')}-`;
   return Object.entries(dayCache).filter(([k]) => k.startsWith(prefix)).sort(([a],[b]) => a.localeCompare(b));
 }
+function getRecentRecords(days) {
+  const end = new Date(currentYear, currentMonth, 0);
+  if (currentYear === todayObj.getFullYear() && currentMonth === todayObj.getMonth() + 1) {
+    end.setDate(todayObj.getDate());
+  }
+  const start = new Date(end);
+  start.setDate(end.getDate() - days + 1);
+  const startKey = fmt(start.getFullYear(), start.getMonth() + 1, start.getDate());
+  const endKey = fmt(end.getFullYear(), end.getMonth() + 1, end.getDate());
+  return Object.entries(dayCache)
+    .filter(([k]) => k >= startKey && k <= endKey)
+    .sort(([a],[b]) => a.localeCompare(b));
+}
+function getReportRecords() {
+  if (reportRange === '7') return getRecentRecords(7);
+  if (reportRange === '14') return getRecentRecords(14);
+  return getMonthRecords();
+}
+function reportRangeLabel() {
+  if (reportRange === '7') return '直近7日';
+  if (reportRange === '14') return '直近14日';
+  return `${currentYear}年${currentMonth}月`;
+}
+function getTodayRecordState() {
+  const isThisMonth = currentYear === todayObj.getFullYear() && currentMonth === todayObj.getMonth() + 1;
+  const rec = isThisMonth ? dayCache[todayKey] : null;
+  const hasAny = !!(rec && (rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo));
+  return { isThisMonth, rec, hasAny };
+}
 
 function hasUrgentAlert(rec) {
   return rec.food === '食べなかった' || rec.water === '飲まなかった' || rec.urine === '血尿あり' || rec.walk === '行きたがらない';
@@ -669,7 +750,72 @@ function hasSoftAlert(rec) {
 }
 function memoHits(memo) {
   if (!memo) return [];
-  return MEMO_ALERT_KEYWORDS.filter(word => memo.includes(word));
+  const hits = [];
+  MEMO_ALERT_RULES.forEach(rule => {
+    rule.words.forEach(word => {
+      let from = 0;
+      while (from < memo.length) {
+        const index = memo.indexOf(word, from);
+        if (index === -1) break;
+        if (!isNegatedMemoWord(memo, index, word.length)) {
+          hits.push({ word, level: rule.level, category: rule.category });
+        }
+        from = index + word.length;
+      }
+    });
+  });
+  const seen = new Set();
+  return hits.filter(hit => {
+    const key = `${hit.level}:${hit.category}:${hit.word}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function isNegatedMemoWord(memo, index, wordLength) {
+  const word = memo.slice(index, index + wordLength);
+  if (word.endsWith('なし') || word.endsWith('ない')) return false;
+  const before = memo.slice(0, index);
+  const after = memo.slice(index + wordLength);
+  const beforeBoundary = Math.max(before.lastIndexOf('。'), before.lastIndexOf('、'), before.lastIndexOf('\n'), before.lastIndexOf(' '));
+  const afterStops = ['。','、','\n',' '].map(mark => {
+    const pos = after.indexOf(mark);
+    return pos === -1 ? after.length : pos;
+  });
+  const afterBoundary = Math.min(...afterStops);
+  const phrase = memo.slice(beforeBoundary + 1, index + wordLength + afterBoundary);
+  return MEMO_NEGATION_WORDS.some(neg => phrase.includes(neg));
+}
+function memoHitWords(hits) {
+  return hits.map(hit => `${hit.word}（${memoLevelLabel(hit.level)}）`);
+}
+function memoLevelLabel(level) {
+  if (level === 'high') return 'すぐ相談';
+  if (level === 'medium') return '注意';
+  return '経過観察';
+}
+function updateMemoAlertBox() {
+  const memo = document.getElementById('healthMemoInput').value.trim();
+  const box = document.getElementById('memoAlertBox');
+  const title = box.querySelector('.memo-alert-title');
+  const text = box.querySelector('.memo-alert-text');
+  const hits = memoHits(memo);
+  box.className = 'memo-alert-box show';
+  if (!memo) {
+    title.textContent = '記録のヒント';
+    text.textContent = '症状がある時は、時間・回数・色・量・食欲・元気さを書くと病院で伝えやすくなります。';
+    return;
+  }
+  if (!hits.length) {
+    title.textContent = '記録のヒント';
+    text.textContent = '気になる症状がある時は、「いつから」「何回」「どんな色・量」「食欲と元気さ」も一緒に書くと診察で役立ちます。';
+    return;
+  }
+  const hasHigh = hits.some(hit => hit.level === 'high');
+  box.classList.add('has-alert');
+  if (hasHigh) box.classList.add('has-high');
+  title.textContent = hasHigh ? 'すぐ相談したい言葉が含まれています' : '注意して見たい言葉が含まれています';
+  text.textContent = `検出: ${memoHitWords(hits).join('、')}。時間・回数・色・量・食欲・元気さも書いておくと病院で伝えやすくなります。`;
 }
 
 function detectHealthAlerts(records) {
@@ -682,7 +828,10 @@ function detectHealthAlerts(records) {
     if (rec.urine === '血尿あり') add('high', `${dayLabel(key)} 血尿の記録があります`, '血尿は病院で必ず伝えたい項目です。', [key]);
     if (rec.walk === '行きたがらない') add('high', `${dayLabel(key)} 散歩に行きたがらない記録があります`, '痛みや体調不良のサインとして見返せます。', [key]);
     const hits = memoHits(rec.healthMemo);
-    if (hits.length) add('high', `${dayLabel(key)} メモに気になる言葉があります`, `検出: ${hits.join('、')}。メモ: ${rec.healthMemo}`, [key]);
+    if (hits.length) {
+      const level = hits.some(hit => hit.level === 'high') ? 'high' : hits.some(hit => hit.level === 'medium') ? 'medium' : 'low';
+      add(level, `${dayLabel(key)} メモに気になる言葉があります`, `検出: ${memoHitWords(hits).join('、')}。メモ: ${rec.healthMemo}`, [key]);
+    }
   });
 
   [
@@ -745,16 +894,57 @@ function findRuns(records, predicate, minLen) {
   return runs;
 }
 
+function renderTodayCard() {
+  const state = getTodayRecordState();
+  const actionText = state.hasAny ? '今日を編集' : '今日の記録';
+  let status = '表示中の月は今日を含みません。今日の記録を開くと、今月に移動します。';
+  if (state.isThisMonth) {
+    status = state.hasAny ? '今日は記録済みです。気になる変化があれば追記できます。' : '今日はまだ記録がありません。';
+  }
+  return `
+    <div class="today-card">
+      <div class="today-title">今日の記録</div>
+      <div class="today-row">
+        <div class="today-status">${esc(status)}</div>
+        <button class="today-action" id="todayRecordBtn">${esc(actionText)}</button>
+      </div>
+    </div>`;
+}
+
+function bindTodayCard() {
+  const btn = document.getElementById('todayRecordBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const y = todayObj.getFullYear();
+    const m = todayObj.getMonth() + 1;
+    const d = todayObj.getDate();
+    if (currentYear !== y) {
+      currentYear = y;
+      currentMonth = m;
+      loadYearData();
+      setTimeout(() => openModal(todayKey, d), 500);
+      return;
+    }
+    if (currentMonth !== m) {
+      currentMonth = m;
+      renderCalendar();
+      renderMonthSummary();
+    }
+    openModal(todayKey, d);
+  });
+}
+
 function renderMonthSummary() {
   const container = document.getElementById('monthSummary');
   const records = getMonthRecords();
   if (records.length === 0) {
-    container.innerHTML = `
+    container.innerHTML = renderTodayCard() + `
       <div class="report-card">
         <div class="report-title">🏥 病院用レポート</div>
         <div style="font-size:0.78rem;color:#666;line-height:1.6">この月の記録が入ると、診察用のまとめを表示できます。</div>
       </div>
       <div class="no-records">📭 この月の記録はまだありません</div>`;
+    bindTodayCard();
     return;
   }
 
@@ -768,6 +958,9 @@ function renderMonthSummary() {
   const alerts = detectHealthAlerts(records);
 
   let html = `
+    ${renderTodayCard()}
+    ${renderInsights(alerts)}
+    ${renderReportCard()}
     <div class="summary-card">
       <div class="summary-card-title">📊 今月の集計</div>
       <div class="summary-grid">
@@ -779,27 +972,11 @@ function renderMonthSummary() {
         ${photoDays > 0 ? `<div class="s-item"><div class="s-val">${photoDays}枚</div><div class="s-lbl">📷 写真</div></div>` : ''}
       </div>
     </div>
-    ${renderInsights(alerts)}
-    <div class="report-card">
-      <div class="report-title">🏥 病院用レポート</div>
-      <div style="font-size:0.78rem;color:#555;line-height:1.6">今月の気になる変化、体重推移、日別記録を診察で見せやすい形式にまとめます。</div>
-      <div class="report-actions">
-        <button id="openReportBtn">レポートを見る</button>
-        <button class="secondary" id="printReportBtn">PDF保存・印刷</button>
-      </div>
-    </div>
     ${renderStats(records)}
     ${renderDayList(records)}
   `;
   container.innerHTML = html;
-  document.getElementById('openReportBtn').addEventListener('click', openVetReport);
-  document.getElementById('printReportBtn').addEventListener('click', () => {
-    openVetReport();
-    setTimeout(() => window.print(), 100);
-  });
-  container.querySelectorAll('.day-item').forEach(el => {
-    el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
-  });
+  bindSummaryActions(container);
 }
 
 function renderInsights(alerts) {
@@ -817,12 +994,57 @@ function renderInsights(alerts) {
       <div class="insight-title">⚠️ 気になる変化</div>
       <div class="insight-list">
         ${alerts.map(a => `
-          <div class="insight-item">
-            <strong>${esc(a.title)}</strong>
+          <div class="insight-item level-${esc(a.level)}">
+            <span class="insight-level level-${esc(a.level)}">${esc(memoLevelLabel(a.level))}</span><strong>${esc(a.title)}</strong>
             <span class="insight-meta">${esc(a.detail)}</span>
           </div>`).join('')}
       </div>
     </div>`;
+}
+
+function renderReportCard() {
+  return `
+    <div class="report-card">
+      <div class="report-title">🏥 病院用レポート</div>
+      <div style="font-size:0.78rem;color:#555;line-height:1.6">気になる変化、体重推移、日別記録を診察で見せやすい形式にまとめます。</div>
+      <div class="report-range" aria-label="レポート期間">
+        <button class="${reportRange === '7' ? 'active' : ''}" data-report-range="7">直近7日</button>
+        <button class="${reportRange === '14' ? 'active' : ''}" data-report-range="14">直近14日</button>
+        <button class="${reportRange === 'month' ? 'active' : ''}" data-report-range="month">今月</button>
+      </div>
+      <div class="report-actions">
+        <button id="openReportBtn">レポートを見る</button>
+        <button class="secondary" id="printReportBtn">PDF保存・印刷</button>
+      </div>
+    </div>`;
+}
+
+function bindSummaryActions(container) {
+  bindTodayCard();
+  container.querySelectorAll('[data-report-range]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      reportRange = btn.dataset.reportRange;
+      renderMonthSummary();
+    });
+  });
+  const openBtn = document.getElementById('openReportBtn');
+  if (openBtn) openBtn.addEventListener('click', openVetReport);
+  const printBtn = document.getElementById('printReportBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => {
+      openVetReport();
+      setTimeout(() => window.print(), 100);
+    });
+  }
+  container.querySelectorAll('[data-day-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      dayListFilter = btn.dataset.dayFilter;
+      renderMonthSummary();
+    });
+  });
+  container.querySelectorAll('.day-item').forEach(el => {
+    el.addEventListener('click', () => openModal(el.dataset.key, parseInt(el.dataset.day)));
+  });
 }
 
 function renderStats(records) {
@@ -889,8 +1111,22 @@ function renderStats(records) {
 }
 
 function renderDayList(records) {
-  let html = `<div class="daylist-title">📋 日別記録一覧</div>`;
-  records.forEach(([key, rec]) => {
+  const alertRecords = records.filter(([,rec]) => hasUrgentAlert(rec) || memoHits(rec.healthMemo).length);
+  const photoRecords = records.filter(([,rec]) => rec.imageUrl);
+  let visibleRecords = records;
+  if (dayListFilter === 'alert') visibleRecords = alertRecords;
+  if (dayListFilter === 'photo') visibleRecords = photoRecords;
+  let html = `
+    <div class="daylist-title">📋 日別記録一覧</div>
+    <div class="day-filter" aria-label="日別一覧フィルター">
+      <button class="${dayListFilter === 'all' ? 'active' : ''}" data-day-filter="all">すべて ${records.length}</button>
+      <button class="${dayListFilter === 'alert' ? 'active' : ''}" data-day-filter="alert">要注意 ${alertRecords.length}</button>
+      <button class="${dayListFilter === 'photo' ? 'active' : ''}" data-day-filter="photo">写真あり ${photoRecords.length}</button>
+    </div>`;
+  if (!visibleRecords.length) {
+    return html + `<div class="no-records">この条件に合う記録はありません</div>`;
+  }
+  visibleRecords.forEach(([key, rec]) => {
     const d = parseInt(key.split('-')[2]);
     const dow = DOW_JP[new Date(currentYear, currentMonth-1, d).getDay()];
     const isAlert = hasUrgentAlert(rec) || memoHits(rec.healthMemo).length;
@@ -967,6 +1203,7 @@ function openModal(key, day) {
   setChoice('walkGroup', rec.walk || null);
   setPhotoState(rec.imageUrl || null);
   document.getElementById('healthMemoInput').value = rec.healthMemo || '';
+  updateMemoAlertBox();
   const hasAny = rec.filaria || rec.weight || rec.food || rec.water || rec.urine || rec.walk || rec.imageUrl || rec.healthMemo;
   document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
   document.getElementById('modalOverlay').classList.remove('hidden');
@@ -1027,6 +1264,23 @@ async function deleteRecord() {
 }
 
 function buildReportHtml(records) {
+  if (!records.length) {
+    return `
+      <div class="report-top">
+        <div>
+          <h2>にこちゃん 健康記録レポート</h2>
+          <div class="report-period">期間: ${esc(reportRangeLabel())}<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+        </div>
+        <div>
+          <button class="report-print" id="reportPrintBtn">PDF保存・印刷</button>
+          <button class="report-close" id="reportCloseBtn">閉じる</button>
+        </div>
+      </div>
+      <div class="report-section">
+        <h3>記録なし</h3>
+        <div class="report-day">選択した期間には記録がありません。</div>
+      </div>`;
+  }
   const alerts = detectHealthAlerts(records);
   const weights = records.filter(([,r]) => r.weight).map(([k,r]) => [k, parseFloat(r.weight)]).filter(([,v]) => !Number.isNaN(v));
   const latestWeight = weights.length ? `${weights[weights.length-1][1].toFixed(1)}kg（${dayLabel(weights[weights.length-1][0])}）` : '記録なし';
@@ -1103,7 +1357,7 @@ function buildReportHtml(records) {
   `;
 }
 function openVetReport() {
-  const records = getMonthRecords();
+  const records = getReportRecords();
   document.getElementById('vetReport').innerHTML = buildReportHtml(records);
   document.getElementById('reportOverlay').classList.remove('hidden');
   document.getElementById('reportCloseBtn').addEventListener('click', closeVetReport);
