@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>にこちゃんの健康管理アプリ</title>
+  <title>にこ・とろん・ルカの健康管理アプリ</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
@@ -349,15 +349,49 @@
       .report-section h3 { color: #111; border-color: #999; }
       .report-alert { border-color: #111; background: white; }
     }
+
+    /* ---- 3匹の切りかえ（年齢つき）。ここが切りかえボタンも兼ねる ---- */
+    .dog-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 10px 10px 0; }
+    .dog-card {
+      background: white; border-radius: 16px; border: 3px solid #D6EAF8; box-shadow: 0 3px 0 #C3DCF0;
+      padding: 9px 4px 8px; text-align: center; cursor: pointer; user-select: none;
+      -webkit-tap-highlight-color: transparent; transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .dog-card:active { transform: translateY(3px); box-shadow: none; }
+    .dog-card.on { border-color: var(--dc); box-shadow: 0 3px 0 var(--dc-dark); background: var(--dc-soft); }
+    .dog-ico { font-size: 1.35rem; line-height: 1.15; }
+    .dog-name { font-size: 0.84rem; font-weight: bold; color: #888; margin-top: 1px; }
+    .dog-card.on .dog-name { color: var(--dc-dark); }
+    .dog-age { font-size: 0.7rem; font-weight: bold; color: #999; line-height: 1.45; margin-top: 3px; }
+    .dog-card.on .dog-age { color: var(--dc-dark); }
+    .dog-age .dog-age-y { font-size: 0.95rem; }
+    .dog-birth { font-size: 0.58rem; color: #b5b5b5; margin-top: 3px; }
+    .dog-card.on .dog-birth { color: var(--dc-dark); opacity: 0.75; }
+    .now-dog {
+      margin: 9px 10px 0; padding: 9px 12px; border-radius: 14px; text-align: center;
+      font-size: 0.78rem; font-weight: bold; color: white; background: #5B9BD5; line-height: 1.5;
+    }
+
+    /* ---- 日付ごとの自由メモ（3匹共通） ---- */
+    .sec-daynote { background: #E8F5E9; border: 3px solid #43A047; }
+    .sec-daynote .sec-label { color: #1B5E20; }
+    .daynote-hint { font-size: 0.66rem; color: #2E7D32; margin-bottom: 8px; line-height: 1.5; }
+    .modal textarea.daynote-input { border-color: #43A047; }
+    .modal textarea.daynote-input:focus { border-color: #1B5E20; }
+    .cal-note { font-size: 0.62rem; line-height: 1; margin-top: 2px; }
+    .db-daynote { background: #E8F5E9; color: #1B5E20; }
   </style>
 </head>
 <body>
-<header>
-  <h1>🐾 にこちゃんの健康管理アプリ</h1>
+<header id="appHeader">
+  <h1>🐾 にこ・とろん・ルカの健康管理アプリ</h1>
   <p>🌸 毎日の健康・フィラリア投薬を記録します 🌸</p>
 </header>
 
 <main>
+  <div class="dog-board" id="dogBoard"></div>
+  <div class="now-dog" id="nowDog"></div>
+
   <div class="year-nav">
     <button id="prevYear">◀</button>
     <div class="year-nav-label" id="yearLabel"></div>
@@ -394,6 +428,7 @@
     <div class="legend-item"><span class="cal-dot dot-health"></span>健康記録</div>
     <div class="legend-item"><span class="cal-dot dot-alert"></span>要注意</div>
     <div class="legend-item">📷 写真あり</div>
+    <div class="legend-item">📝 自由メモ</div>
   </div>
 
   <div class="month-summary" id="monthSummary"></div>
@@ -518,6 +553,12 @@
       </div>
     </div>
 
+    <div class="sec-card sec-daynote">
+      <div class="sec-label">📝 この日の自由メモ</div>
+      <div class="daynote-hint">3匹共通の欄です。どの子から開いても同じ内容が出ます（例：動物病院へ行った、来客あり、暑かった など）</div>
+      <textarea id="dayNoteInput" class="daynote-input" placeholder="この日にあったことを自由に書けます"></textarea>
+    </div>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" id="modalCancel">キャンセル</button>
       <button class="modal-btn danger" id="deleteBtn" style="display:none">🗑️ 削除</button>
@@ -542,10 +583,33 @@ const FIREBASE_CONFIG = {
   appId: "1:416564829020:web:922f2f88b6cc78c3297f99"
 };
 
+/* 3匹の設定。
+   保存先はこれまでと同じ 'filaria' の中で、書類の名前（ID）を分けて混ざらないようにする。
+     にこ    … 2026-09-07        （今までのまま。だから過去の記録がそのまま出る）
+     とろん  … toron_2026-09-07
+     ルカ    … luka_2026-09-07
+     自由メモ… note_2026-09-07   （3匹共通）
+   Firestore のルールが filaria だけを許しているため、コレクションは増やさない。 */
+const REC_COLLECTION = 'filaria';
+const NOTE_PREFIX = 'note_';
+const DOGS = [
+  { id:'niko',  name:'にこ',   emoji:'🐕', birth:'2012-06-02',
+    color:'#5B9BD5', dark:'#2D6A9F', soft:'#EAF4FB', prefix:'',        defaultWeight:7.5 },
+  { id:'toron', name:'とろん', emoji:'🐶', birth:'2018-04-15',
+    color:'#2E9E88', dark:'#00695C', soft:'#E3F5F1', prefix:'toron_',  defaultWeight:7.5 },
+  { id:'luka',  name:'ルカ',   emoji:'🐩', birth:'2026-05-21',
+    color:'#E4749B', dark:'#B03D66', soft:'#FDEDF2', prefix:'luka_',   defaultWeight:3.0 }
+];
+/* 日付から、その子の書類の名前を作る */
+function docIdFor(dateKey, prefix) { return `${prefix ?? dog().prefix}${dateKey}`; }
+const DOG_KEY = 'nikoapp.dogId';
+let currentDogId = 'niko';
+try { const saved = localStorage.getItem(DOG_KEY); if (saved && DOGS.some(d => d.id === saved)) currentDogId = saved; } catch(e) {}
+function dog() { return DOGS.find(d => d.id === currentDogId) || DOGS[0]; }
+
 const MONTH_JP = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const DOW_JP = ['日','月','火','水','木','金','土'];
 const FILARIA_MONTHS = [5,6,7,8,9,10,11,12];
-const DEFAULT_WEIGHT = 7.5;
 const MEMO_ALERT_RULES = [
   { level:'high', category:'呼吸', words:['息が荒い','息が早い','呼吸が荒い','呼吸が早い','呼吸が苦しそう','息苦しそう'] },
   { level:'high', category:'神経', words:['けいれん','痙攣','発作','意識がない','倒れた'] },
@@ -564,11 +628,14 @@ let currentMonth = todayObj.getMonth() + 1;
 let currentModalDate = null;
 let dayCache = {};
 let unsubListener = null;
-let weightVal = DEFAULT_WEIGHT;
+let weightVal = 7.5;
 let currentPhotoUrl = null;
 let currentPhotoFile = null;
 let photoRemoved = false;
 let dayListFilter = 'all';
+let noteCache = {};      /* 日付ごとの自由メモ（3匹共通） */
+let unsubNotes = null;
+let notesYear = null;
 let reportRange = 'month';
 
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -623,7 +690,7 @@ function setWeightState(saved) {
     weightEnableEl.checked = true;
     weightStepperEl.classList.remove('hidden');
   } else {
-    weightVal = getLatestWeightBefore(currentModalDate) || DEFAULT_WEIGHT;
+    weightVal = getLatestWeightBefore(currentModalDate) || dog().defaultWeight;
     weightEnableEl.checked = false;
     weightStepperEl.classList.add('hidden');
   }
@@ -688,13 +755,81 @@ async function handlePhotoSave() {
   }
   if (currentPhotoFile) {
     photoProgressEl.textContent = '📤 アップロード中...';
-    const ref = storage.ref(`filaria-images/${currentModalDate}/image`);
+    const ref = storage.ref(`filaria-images/${docIdFor(currentModalDate)}/image`);
     await ref.put(currentPhotoFile);
     const url = await ref.getDownloadURL();
     photoProgressEl.textContent = '';
     return url;
   }
   return currentPhotoUrl;
+}
+
+/* 生まれてからの「〜歳〜ヶ月〜日」。月の日数が月によって違うので、
+   日が足りないときは「今日の前の月」の日数を借りて数える（誕生日の数え方と同じ）。 */
+function ageParts(birthStr) {
+  const [by, bm, bd] = birthStr.split('-').map(Number);
+  const now = new Date();
+  const ny = now.getFullYear(), nm = now.getMonth() + 1, nd = now.getDate();
+  const born = `${ny}-${String(nm).padStart(2,'0')}-${String(nd).padStart(2,'0')}` >= birthStr;
+  if (!born) return null;
+  let y = ny - by, m = nm - bm, d = nd - bd;
+  if (d < 0) {
+    m -= 1;
+    const pm = nm === 1 ? 12 : nm - 1;
+    const py = nm === 1 ? ny - 1 : ny;
+    d += new Date(py, pm, 0).getDate();
+  }
+  if (m < 0) { y -= 1; m += 12; }
+  return { y, m, d };
+}
+function ageText(birthStr) {
+  const a = ageParts(birthStr);
+  return a ? `${a.y}歳${a.m}ヶ月${a.d}日` : 'これから生まれます';
+}
+function isBirthday(birthStr) {
+  const [, bm, bd] = birthStr.split('-').map(Number);
+  return todayObj.getMonth() + 1 === bm && todayObj.getDate() === bd;
+}
+function birthLabel(birthStr) {
+  const [y, m, d] = birthStr.split('-').map(Number);
+  return `${y}.${m}.${d}生`;
+}
+
+/* 3匹の年齢を並べて出す。ここを押すと、その子の記録に切りかわる。 */
+function renderDogBoard() {
+  const board = document.getElementById('dogBoard');
+  board.innerHTML = DOGS.map(d => {
+    const a = ageParts(d.birth);
+    const bd = isBirthday(d.birth);
+    return `<div class="dog-card${d.id === currentDogId ? ' on' : ''}" data-dog="${d.id}"
+        style="--dc:${d.color};--dc-dark:${d.dark};--dc-soft:${d.soft}">
+      <div class="dog-ico">${bd ? '🎂' : d.emoji}</div>
+      <div class="dog-name">${esc(d.name)}ちゃん</div>
+      <div class="dog-age">${a ? `<span class="dog-age-y">${a.y}歳</span><br>${a.m}ヶ月${a.d}日` : 'これから'}</div>
+      <div class="dog-birth">${esc(birthLabel(d.birth))}</div>
+    </div>`;
+  }).join('');
+  board.querySelectorAll('[data-dog]').forEach(el => {
+    el.addEventListener('click', () => switchDog(el.dataset.dog));
+  });
+
+  const d = dog();
+  const bd = isBirthday(d.birth);
+  const header = document.getElementById('appHeader');
+  header.style.background = d.color;
+  header.style.boxShadow = `0 4px 0 ${d.dark}`;
+  const now = document.getElementById('nowDog');
+  now.style.background = d.color;
+  now.innerHTML = `${bd ? '🎂 お誕生日おめでとう！ ' : ''}いま記録しているのは「${esc(d.name)}ちゃん」（${esc(ageText(d.birth))}）`;
+}
+
+function switchDog(id) {
+  if (id === currentDogId) return;
+  currentDogId = id;
+  try { localStorage.setItem(DOG_KEY, id); } catch(e) {}
+  dayListFilter = 'all';
+  renderDogBoard();
+  loadYearData();
 }
 
 function fmt(y, m, d) {
@@ -711,16 +846,20 @@ function dayLabel(key) {
 function loadYearData() {
   if (unsubListener) { unsubListener(); unsubListener = null; }
   dayCache = {};
+  loadNotes();
   setConn('loading', '<span class="spinner"></span>接続中...');
-  unsubListener = db.collection('filaria')
+  const pre = dog().prefix;
+  unsubListener = db.collection(REC_COLLECTION)
     .orderBy(firebase.firestore.FieldPath.documentId())
-    .startAt(`${currentYear}-01-01`)
-    .endAt(`${currentYear}-12-31`)
+    .startAt(`${pre}${currentYear}-01-01`)
+    .endAt(`${pre}${currentYear}-12-31`)
     .onSnapshot(
       snap => {
         dayCache = {};
         snap.forEach(doc => {
-          if (/^\d{4}-\d{2}-\d{2}$/.test(doc.id)) dayCache[doc.id] = doc.data();
+          if (!doc.id.startsWith(pre)) return;
+          const key = doc.id.slice(pre.length);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(key)) dayCache[key] = doc.data();
         });
         renderFilariaChips();
         renderCalendar();
@@ -733,6 +872,31 @@ function loadYearData() {
         renderCalendar();
         renderMonthSummary();
       }
+    );
+}
+
+/* 自由メモは3匹共通なので、子を切りかえても読み直さない（年が変わったときだけ） */
+function loadNotes() {
+  if (notesYear === currentYear && unsubNotes) return;
+  if (unsubNotes) { unsubNotes(); unsubNotes = null; }
+  notesYear = currentYear;
+  noteCache = {};
+  unsubNotes = db.collection(REC_COLLECTION)
+    .orderBy(firebase.firestore.FieldPath.documentId())
+    .startAt(`${NOTE_PREFIX}${currentYear}-01-01`)
+    .endAt(`${NOTE_PREFIX}${currentYear}-12-31`)
+    .onSnapshot(
+      snap => {
+        noteCache = {};
+        snap.forEach(doc => {
+          const note = doc.data() && doc.data().note;
+          const key = doc.id.slice(NOTE_PREFIX.length);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(key) && note) noteCache[key] = note;
+        });
+        renderCalendar();
+        renderMonthSummary();
+      },
+      err => { console.error(err); }
     );
 }
 
@@ -1195,6 +1359,8 @@ function renderDayList(records) {
     if (rec.walk) badges += `<span class="dbadge db-walk${rec.walk==='行きたがらない'?' db-alert':''}">🦮 ${esc(rec.walk)}</span>`;
     if (rec.imageUrl) badges += `<span class="dbadge db-photo">📷 写真あり</span>`;
     if (rec.healthMemo) badges += `<span class="dbadge db-memo">📋 ${esc(rec.healthMemo.length>18 ? rec.healthMemo.substring(0,18)+'…' : rec.healthMemo)}</span>`;
+    const note = noteCache[key];
+    if (note) badges += `<span class="dbadge db-daynote">📝 ${esc(note.length>18 ? note.substring(0,18)+'…' : note)}</span>`;
     html += `
       <div class="day-item${isAlert?' day-alert':''}" data-key="${key}" data-day="${d}">
         <div class="day-item-hd">
@@ -1226,8 +1392,9 @@ function renderCalendar() {
     const hasWeight = !!rec?.weight;
     const hasPhoto = !!rec?.imageUrl;
     const hasHealth = rec && (rec.food || rec.vomit || rec.water || rec.waterMl || rec.urine || rec.nightAccident || rec.walk || rec.healthMemo);
+    const hasNote = !!noteCache[key];
     const isAlert = rec && (hasUrgentAlert(rec) || hasSoftAlert(rec) || memoHits(rec.healthMemo).length);
-    const hasAny = hasFilaria || hasWeight || hasHealth || hasPhoto;
+    const hasAny = hasFilaria || hasWeight || hasHealth || hasPhoto || hasNote;
     const dow = (firstDow + d - 1) % 7;
     let dateColor = '#555';
     if (dow === 0) dateColor = '#E53935';
@@ -1240,7 +1407,8 @@ function renderCalendar() {
     else if (hasHealth) dots += '<span class="cal-dot dot-health"></span>';
     const cell = document.createElement('div');
     cell.className = 'cal-cell' + (isToday ? ' today' : '') + (hasAny ? ' has-data' : '');
-    cell.innerHTML = `<div class="cal-date" style="color:${dateColor}">${d}</div><div class="cal-dots">${dots}</div>${hasPhoto ? '<div class="cal-camera">📷</div>' : ''}`;
+    const marks = `${hasPhoto ? '📷' : ''}${hasNote ? '📝' : ''}`;
+    cell.innerHTML = `<div class="cal-date" style="color:${dateColor}">${d}</div><div class="cal-dots">${dots}</div>${marks ? `<div class="cal-camera">${marks}</div>` : ''}`;
     cell.addEventListener('click', () => openModal(key, d));
     grid.appendChild(cell);
   }
@@ -1250,7 +1418,7 @@ function openModal(key, day) {
   currentModalDate = key;
   const rec = dayCache[key] || {};
   const dow = DOW_JP[new Date(currentYear, currentMonth-1, day).getDay()];
-  document.getElementById('modalTitle').textContent = `${currentMonth}月${day}日（${dow}）の記録`;
+  document.getElementById('modalTitle').textContent = `${dog().emoji} ${dog().name}ちゃん｜${currentMonth}月${day}日（${dow}）`;
   document.getElementById('filariaCheck').checked = !!rec.filaria;
   setWeightState(rec.weight || null);
   setChoice('foodGroup', rec.food || null);
@@ -1262,6 +1430,7 @@ function openModal(key, day) {
   setChoice('walkGroup', rec.walk || null);
   setPhotoState(rec.imageUrl || null);
   document.getElementById('healthMemoInput').value = rec.healthMemo || '';
+  document.getElementById('dayNoteInput').value = noteCache[key] || '';
   updateMemoAlertBox();
   const hasAny = rec.filaria || rec.weight || rec.food || rec.vomit || rec.water || rec.waterMl || rec.urine || rec.nightAccident || rec.walk || rec.imageUrl || rec.healthMemo;
   document.getElementById('deleteBtn').style.display = hasAny ? 'block' : 'none';
@@ -1302,8 +1471,27 @@ async function saveRecord() {
     if (walk) data.walk = walk;
     if (imageUrl) data.imageUrl = imageUrl;
     if (healthMemo) data.healthMemo = healthMemo;
-    if (Object.keys(data).length === 0) { alert('何か入力してから記録してください。'); return; }
-    await db.collection('filaria').doc(currentModalDate).set(data);
+    const dayNote = document.getElementById('dayNoteInput').value.trim();
+    const hadNote = !!noteCache[currentModalDate];
+    const hadRecord = !!dayCache[currentModalDate];
+    if (Object.keys(data).length === 0 && !dayNote && !hadNote && !hadRecord) {
+      alert('何か入力してから記録してください。');
+      return;
+    }
+
+    /* 自由メモは3匹共通（note_日付）。空にして保存したら消す。 */
+    const noteRef = db.collection(REC_COLLECTION).doc(`${NOTE_PREFIX}${currentModalDate}`);
+    if (dayNote) await noteRef.set({ note: dayNote });
+    else if (hadNote) await noteRef.delete();
+
+    /* この子の記録。全部空にして保存したときは、消してよいか確かめる。 */
+    if (Object.keys(data).length) {
+      await db.collection(REC_COLLECTION).doc(docIdFor(currentModalDate)).set(data);
+    } else if (hadRecord) {
+      if (confirm(`${dog().name}ちゃんの項目がすべて空です。この日の${dog().name}ちゃんの記録を削除しますか？\n（自由メモは残ります）`)) {
+        await db.collection(REC_COLLECTION).doc(docIdFor(currentModalDate)).delete();
+      }
+    }
     closeModal();
   } catch(e) {
     console.error(e);
@@ -1316,13 +1504,13 @@ async function saveRecord() {
 }
 async function deleteRecord() {
   if (!currentModalDate) return;
-  if (!confirm('この日の記録を削除しますか？')) return;
+  if (!confirm(`この日の${dog().name}ちゃんの記録を削除しますか？\n（3匹共通の自由メモは残ります）`)) return;
   try {
     const rec = dayCache[currentModalDate];
     if (rec?.imageUrl) {
       try { await storage.refFromURL(rec.imageUrl).delete(); } catch(e) {}
     }
-    await db.collection('filaria').doc(currentModalDate).delete();
+    await db.collection(REC_COLLECTION).doc(docIdFor(currentModalDate)).delete();
     closeModal();
   } catch(e) {
     alert('削除に失敗しました。\n' + e.message);
@@ -1334,8 +1522,8 @@ function buildReportHtml(records) {
     return `
       <div class="report-top">
         <div>
-          <h2>にこちゃん 健康記録レポート</h2>
-          <div class="report-period">期間: ${esc(reportRangeLabel())}<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          <h2>${esc(dog().name)}ちゃん 健康記録レポート</h2>
+          <div class="report-period">${esc(ageText(dog().birth))}（${esc(dog().birth)}生まれ）<br>期間: ${esc(reportRangeLabel())}<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
         </div>
         <div>
           <button class="report-print" id="reportPrintBtn">PDF保存・印刷</button>
@@ -1359,8 +1547,8 @@ function buildReportHtml(records) {
   return `
     <div class="report-top">
       <div>
-        <h2>にこちゃん 健康記録レポート</h2>
-        <div class="report-period">期間: ${esc(dayLabel(firstDay))}〜${esc(dayLabel(lastDay))}（${currentYear}年${currentMonth}月）<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+        <h2>${esc(dog().name)}ちゃん 健康記録レポート</h2>
+        <div class="report-period">${esc(ageText(dog().birth))}（${esc(dog().birth)}生まれ）<br>期間: ${esc(dayLabel(firstDay))}〜${esc(dayLabel(lastDay))}（${currentYear}年${currentMonth}月）<br>作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
       </div>
       <div>
         <button class="report-print" id="reportPrintBtn">PDF保存・印刷</button>
@@ -1509,6 +1697,7 @@ function setConn(state, html) {
   el.innerHTML = html;
 }
 
+renderDogBoard();
 loadYearData();
 </script>
 </body>
